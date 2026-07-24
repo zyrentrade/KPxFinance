@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>KPxFinance · v9</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;background:#0D1B24}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100dvh;min-height:100vh}
+#root{min-height:100dvh;min-height:100vh}
+input,select,button,textarea{font-family:inherit}
+input[type=number]::-webkit-inner-spin-button{opacity:.4}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:4px}
+
+/* ── MOBILE DARK TOKENS ── */
+:root{
+  --bg:#0D1B24;--surface:#152433;--card:#1C3044;--bd:#2A4460;
+  --em:#1DB870;--amber:#E8A020;--coral:#E05040;--violet:#7090D8;--blue:#4090D0;
+  --muted:#5A7A90;--tx:#D8EAF4;--sub:#8AAAC0;--ink:#0D1B24;
+  --shadow:rgba(0,0,0,.35);
+  --is-mobile:1;
+}
+
+/* ── DESKTOP LIGHT TOKENS ── */
+@media(min-width:700px){
+  html{background:#F0F4F8}
+  :root{
+    --bg:#F0F4F8;--surface:#FFFFFF;--card:#FFFFFF;--bd:#D8E4EE;
+    --em:#1DB870;--amber:#D4900A;--coral:#C04030;--violet:#5070C0;--blue:#1860A0;
+    --muted:#90AABC;--tx:#0E2A38;--sub:#3A6070;--ink:#F0F4F8;
+    --shadow:rgba(14,42,56,.08);
+    --is-mobile:0;
+  }
+}
+
+body{background:var(--bg);color:var(--tx)}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:900;display:flex;align-items:flex-end;justify-content:center}
+@media(min-width:700px){.overlay{align-items:center;padding:1rem}}
+.sheet{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;padding:1.25rem;padding-bottom:max(1.25rem,env(safe-area-inset-bottom))}
+@media(min-width:700px){.sheet{border-radius:16px;max-height:88vh}}
+
+/* ── TOAST ── */
+.toasts{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:1000;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;width:min(360px,90vw)}
+.toast{background:var(--card);border:0.5px solid var(--bd);border-radius:12px;padding:10px 16px;font-size:13px;font-weight:600;color:var(--tx);box-shadow:0 4px 20px var(--shadow);animation:tin .2s ease;white-space:nowrap;border-left-width:3px}
+@keyframes tin{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes tout{to{opacity:0;transform:translateY(-8px)}}
+.toast.out{animation:tout .18s ease forwards}
+
+/* ── CONFIRM ── */
+.cbox{background:var(--card);border:0.5px solid var(--bd);border-radius:16px;padding:1.25rem;width:min(320px,90vw);box-shadow:0 8px 32px var(--shadow)}
+
+/* ── MOBILE BOTTOM NAV ── */
+.bnav{display:none}
+@media(max-width:699px){
+  .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:0.5px solid var(--bd);z-index:800;padding:6px 0 max(8px,env(safe-area-inset-bottom));justify-content:space-around}
+  .bnav button{flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font-size:9px;font-weight:600;padding:2px;position:relative}
+  .bnav button.act{color:var(--em)}
+  .bnav .ni{font-size:22px;line-height:1}
+  .mppad{padding-bottom:max(72px,calc(56px + env(safe-area-inset-bottom)))}
+}
+
+/* ── DESKTOP TOP NAV ── */
+.deskonly{display:none}
+.mobonly{display:block}
+@media(min-width:700px){
+  .deskonly{display:block}
+  .mobonly{display:none}
+  .deskflex{display:flex!important}
+  .deskgrid2{display:grid!important;grid-template-columns:1fr 1fr}
+  .deskgrid3{display:grid!important;grid-template-columns:1.4fr 1fr 0.9fr}
+  .deskgrid5{display:grid!important;grid-template-columns:repeat(5,1fr)}
+}
+
+/* ── RESPONSIVE FORM ── */
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:480px){.fg2{grid-template-columns:1fr}.fg3{grid-template-columns:1fr 1fr}}
+
+/* ── ANIMATIONS ── */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.syncing{animation:pulse 1.4s ease-in-out infinite}
+@keyframes shimmer{0%{background-position:-200%}100%{background-position:200%}}
+.skeleton{background:linear-gradient(90deg,var(--bd) 25%,var(--surface) 50%,var(--bd) 75%);background-size:200%;animation:shimmer 1.5s infinite}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useMemo,useCallback,useRef}=React;
+
+/* ── Constants ── */
+const MAIN_PID="__main__";
+const TRADER_PID="__trader__";
+const GEMINI_KEY="kpxf_gk";
+const SHEETS_URL="kpxf_su";
+const LAST_PUSH="kpxf_lp";
+const AUTO_MS=5*60*1000;
+const MOBILE_BP=700;
+
+/* ── Utils ── */
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const today=()=>new Date().toISOString().split("T")[0];
+const nowIso=()=>new Date().toISOString();
+const thisMonth=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");};
+const addM=(mk,n)=>{const[y,m]=mk.split("-").map(Number);const d=new Date(y,m-1+n,1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const fmtN=(n,d=2)=>parseFloat(n||0).toFixed(d);
+const SYM={THB:"฿",USD:"$",EUR:"€",JPY:"¥",GBP:"£",SGD:"S$"};
+const fmtC=(n,c="THB")=>(SYM[c]||c+" ")+Math.abs(n||0).toLocaleString("en-US",{minimumFractionDigits:c==="THB"?0:2,maximumFractionDigits:4});
+const fmt=n=>"฿"+Math.round(n||0).toLocaleString("th-TH");
+const mLbl=mk=>{if(!mk)return"";const[y,m]=mk.split("-");return new Date(y,m-1,1).toLocaleDateString("th-TH",{month:"short",year:"2-digit"});};
+const isMobile=()=>window.innerWidth<MOBILE_BP;
+
+/* ── useLS ── */
+function useLS(key,init){
+  const[v,setV]=useState(()=>{try{const s=localStorage.getItem(key);return s?JSON.parse(s):init;}catch{return init;}});
+  const set=useCallback(fn=>{setV(p=>{const n=typeof fn==="function"?fn(p):fn;try{localStorage.setItem(key,JSON.stringify(n));}catch{}return n;});},[key]);
+  return[v,set];
+}
+
+/* ── useIsMobile ── */
+function useIsMobile(){
+  const[m,setM]=useState(()=>window.innerWidth<MOBILE_BP);
+  useEffect(()=>{const h=()=>setM(window.innerWidth<MOBILE_BP);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h);},[]);
+  return m;
+}
+
+/* ── Toast ── */
+const TC=React.createContext(null);
+function ToastProvider({children}){
+  const[ts,setTs]=useState([]);
+  const show=useCallback((msg,type="info",ms=2600)=>{
+    const id=uid();
+    setTs(p=>[...p.slice(-3),{id,msg,type}]);
+    setTimeout(()=>setTs(p=>p.map(t=>t.id===id?{...t,out:true}:t)),ms-220);
+    setTimeout(()=>setTs(p=>p.filter(t=>t.id!==id)),ms);
+  },[]);
+  const tc={ok:"var(--em)",error:"var(--coral)",warn:"var(--amber)",info:"var(--blue)"};
+  return<TC.Provider value={show}>
+    {children}
+    <div className="toasts">{ts.map(t=><div key={t.id} className={"toast"+(t.out?" out":"")} style={{borderLeftColor:tc[t.type]||tc.info}}>{t.msg}</div>)}</div>
+  </TC.Provider>;
+}
+const useToast=()=>React.useContext(TC);
+
+/* ── Confirm ── */
+function ConfirmDlg({msg,onOk,onCancel}){
+  return<div className="overlay" onClick={e=>{if(e.target===e.currentTarget)onCancel();}}>
+    <div className="cbox">
+      <p style={{fontSize:14,color:"var(--tx)",marginBottom:16,lineHeight:1.5}}>{msg}</p>
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+        <Btn sm col="var(--bd)" style={{color:"var(--sub)"}} onClick={onCancel}>ยกเลิก</Btn>
+        <Btn sm col="var(--coral)" onClick={onOk}>ลบ</Btn>
+      </div>
+    </div>
+  </div>;
+}
+function useConfirm(){
+  const[c,setC]=useState(null);
+  const ask=msg=>new Promise(r=>setC({msg,r}));
+  const Dialog=c?<ConfirmDlg msg={c.msg} onOk={()=>{c.r(true);setC(null);}} onCancel={()=>{c.r(false);setC(null);}}/>:null;
+  return{ask,Dialog};
+}
+
+/* ── Atoms ── */
+const Btn=({children,col="var(--em)",onClick,style={},disabled=false,sm=false,full=false})=>
+  <button onClick={onClick} disabled={disabled}
+    style={{background:disabled?"var(--bd)":col,color:disabled?"var(--muted)":"#fff",
+      border:"none",borderRadius:10,padding:sm?"7px 14px":"10px 18px",
+      fontSize:sm?12:14,fontWeight:700,cursor:disabled?"default":"pointer",
+      whiteSpace:"nowrap",lineHeight:1.2,width:full?"100%":"auto",...style}}>
+    {children}
+  </button>;
+
+const IBtn=({children,onClick,title,danger=false})=>
+  <button onClick={onClick} title={title}
+    style={{background:"none",border:"none",cursor:"pointer",color:"var(--muted)",
+      padding:"4px 6px",borderRadius:6,fontSize:15,lineHeight:1}}
+    onMouseEnter={e=>e.currentTarget.style.color=danger?"var(--coral)":"var(--blue)"}
+    onMouseLeave={e=>e.currentTarget.style.color="var(--muted)"}>
+    {children}
+  </button>;
+
+const Badge=({label,color="var(--em)",style={}})=>
+  <span style={{background:color+"22",color,border:`1px solid ${color}44`,
+    borderRadius:99,padding:"2px 8px",fontSize:11,fontWeight:600,whiteSpace:"nowrap",...style}}>
+    {label}
+  </span>;
+
+const Card=({children,style={}})=>
+  <div style={{background:"var(--card)",border:"0.5px solid var(--bd)",
+    borderRadius:14,padding:"1rem",...style}}>
+    {children}
+  </div>;
+
+const SL=({children,style={}})=>
+  <div style={{fontSize:10,fontWeight:700,color:"var(--muted)",
+    textTransform:"uppercase",letterSpacing:".08em",marginBottom:8,...style}}>
+    {children}
+  </div>;
+
+const Inp=({style={},...p})=>
+  <input {...p} style={{background:"var(--surface)",border:"1px solid var(--bd)",
+    borderRadius:10,padding:"10px 12px",color:"var(--tx)",fontSize:14,
+    width:"100%",outline:"none",...style}}/>;
+
+const Sel=({children,style={},...p})=>
+  <select {...p} style={{background:"var(--surface)",border:"1px solid var(--bd)",
+    borderRadius:10,padding:"10px 12px",color:"var(--tx)",fontSize:14,
+    width:"100%",outline:"none",...style}}>
+    {children}
+  </select>;
+
+const PBar=({pct,col="var(--em)",h=5})=>
+  <div style={{background:"var(--bd)",borderRadius:4,height:h,overflow:"hidden"}}>
+    <div style={{width:`${clamp(pct,0,100)}%`,height:h,background:col,borderRadius:4,transition:"width .4s"}}/>
+  </div>;
+
+const Lbl=({children})=>
+  <div style={{fontSize:12,color:"var(--muted)",marginBottom:4,fontWeight:600}}>
+    {children}
+  </div>;
+
+const FW=({label,children,style={}})=>
+  <div style={style}><Lbl>{label}</Lbl>{children}</div>;
+
+const TH=({children,right,className=""})=>
+  <th className={className} style={{textAlign:right?"right":"left",padding:"8px",
+    fontSize:11,fontWeight:700,color:"var(--muted)",borderBottom:"1px solid var(--bd)",
+    whiteSpace:"nowrap"}}>
+    {children}
+  </th>;
+
+const TD=({children,right,style={},className=""})=>
+  <td className={className} style={{textAlign:right?"right":"left",padding:"8px",
+    fontSize:13,color:"var(--tx)",borderBottom:"0.5px solid var(--bd)",
+    verticalAlign:"middle",...style}}>
+    {children}
+  </td>;
+
+const ERow=({cols,msg="ยังไม่มีข้อมูล"})=>
+  <tr><td colSpan={cols} style={{textAlign:"center",padding:"2rem",
+    color:"var(--muted)",fontSize:13}}>{msg}</td></tr>;
+
+const CSel=({value,onChange,currencies,style={}})=>
+  <Sel value={value} onChange={e=>onChange(e.target.value)}
+    style={{width:80,padding:"8px 6px",fontSize:12,...style}}>
+    {currencies.map(c=><option key={c}>{c}</option>)}
+  </Sel>;
+
+/* ── Modal / Sheet ── */
+function Modal({title,onClose,children}){
+  useEffect(()=>{document.body.style.overflow="hidden";return()=>{document.body.style.overflow="";};},[]);
+  return<div className="overlay" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+    <div className="sheet">
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <span style={{fontWeight:700,fontSize:16,color:"var(--tx)"}}>{title}</span>
+        <IBtn onClick={onClose} title="ปิด">✕</IBtn>
+      </div>
+      {children}
+    </div>
+  </div>;
+}
+
+/* ── Gemini ── */
+async function readSlipGemini(file,prompt){
+  const key=localStorage.getItem(GEMINI_KEY)||"";
+  if(!key)throw new Error("NO_KEY");
+  // Convert file to base64
+  const b64=await new Promise((ok,er)=>{const r=new FileReader();r.onload=()=>ok(r.result.split(",")[1]);r.onerror=er;r.readAsDataURL(file);});
+  // Detect MIME — iPhone often sends empty string
+  const ext=(file.name||"").split(".").pop().toLowerCase();
+  const mimeMap={jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",gif:"image/gif",webp:"image/webp",heic:"image/jpeg",heif:"image/jpeg"};
+  const mime=(file.type&&file.type!=="application/octet-stream"&&file.type!=="")?file.type:(mimeMap[ext]||"image/jpeg");
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${key}`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      contents:[{parts:[{inline_data:{mime_type:mime,data:b64}},{text:prompt}]}],
+      generationConfig:{temperature:0.1,maxOutputTokens:1024}
+    })
+  });
+  if(!res.ok){
+    let msg="Gemini error "+res.status;
+    try{const e=await res.json();msg=e.error?.message||msg;}catch{}
+    throw new Error(msg);
+  }
+  const d=await res.json();
+  // Check for blocked content
+  if(d.candidates?.[0]?.finishReason==="SAFETY")throw new Error("ภาพถูก block โดย safety filter");
+  const raw=(d.candidates?.[0]?.content?.parts?.[0]?.text||"").trim();
+  if(!raw)throw new Error("Gemini ไม่ส่งข้อความกลับ");
+  // Strip markdown code blocks if any
+  return raw.replace(/^```json\s*/i,"").replace(/^```\s*/i,"").replace(/\s*```$/,"").trim();
+}
+
+function GeminiCfg({onClose}){
+  const[k,setK]=useState(()=>localStorage.getItem(GEMINI_KEY)||"");
+  const toast=useToast();
+  return<div style={{background:"var(--surface)",borderRadius:12,padding:14,marginBottom:12}}>
+    <div style={{fontSize:13,fontWeight:700,color:"var(--tx)",marginBottom:6}}>Gemini API Key</div>
+    <div style={{fontSize:11,color:"var(--muted)",marginBottom:8,lineHeight:1.6}}>
+      รับฟรีที่ <a href="https://aistudio.google.com/app/apikey" target="_blank" style={{color:"var(--blue)"}}>aistudio.google.com</a> · เก็บในเครื่องนี้เท่านั้น
+    </div>
+    <div style={{display:"flex",gap:6}}>
+      <Inp type="password" placeholder="AIza..." value={k} onChange={e=>setK(e.target.value)} style={{flex:1,fontSize:12}}/>
+      <Btn sm col="var(--em)" style={{color:"var(--ink)"}} onClick={()=>{localStorage.setItem(GEMINI_KEY,k.trim());toast("✅ บันทึก Key แล้ว","ok");onClose();}}>บันทึก</Btn>
+      <Btn sm col="var(--bd)" style={{color:"var(--sub)"}} onClick={onClose}>ยกเลิก</Btn>
+    </div>
+  </div>;
+}
+
+/* ── Slip Zone ── */
+function SlipZone({onFile,state}){
+  const[drag,setDrag]=useState(false);
+  const ref=useRef();
+  const msgs={loading:"⏳ Gemini กำลังวิเคราะห์...",ok:"✅ อ่านสำเร็จ — ดูใน Pending",error:"❌ อ่านไม่ได้ ลองใหม่",nokey:"🔑 ตั้งค่า Gemini Key ก่อน"};
+  const handle=e=>{e.preventDefault();const f=e.dataTransfer?.files[0]||e.target.files[0];if(f)onFile(f);if(ref.current)ref.current.value="";};
+  return<div
+    onDragOver={e=>{e.preventDefault();setDrag(true);}}
+    onDragLeave={()=>setDrag(false)}
+    onDrop={e=>{setDrag(false);handle(e);}}
+    onClick={()=>ref.current?.click()}
+    style={{border:`1.5px dashed ${drag?"var(--em)":"var(--bd)"}`,borderRadius:12,
+      padding:"1.2rem",textAlign:"center",cursor:"pointer",color:"var(--muted)",
+      fontSize:13,background:drag?"var(--em)11":"transparent",transition:"all .2s",marginBottom:8}}>
+    <input ref={ref} type="file" accept="image/*,image/heic,image/heif" style={{display:"none"}} onChange={handle}/>
+    {state==="loading"?<span className="syncing">{msgs.loading}</span>:(msgs[state]||"📷 คลิกหรือลาก slip มาวาง")}
+  </div>;
+}
+
+/* ── CatMgr ── */
+function CatMgr({cats,setCats}){
+  const[nv,setNv]=useState("");
+  const add=()=>{if(nv.trim()&&!cats.includes(nv.trim())){setCats(p=>[...p,nv.trim()]);setNv("");}};
+  return<div style={{marginTop:10,padding:12,background:"var(--surface)",borderRadius:10}}>
+    <div style={{display:"flex",gap:6,marginBottom:8}}>
+      <Inp placeholder="หมวดหมู่ใหม่" value={nv} onChange={e=>setNv(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} style={{flex:1}}/>
+      <Btn sm col="var(--em)" style={{color:"var(--ink)"}} onClick={add}>+ เพิ่ม</Btn>
+    </div>
+    <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+      {cats.map((c,i)=><div key={c} style={{background:"var(--card)",border:"1px solid var(--bd)",borderRadius:99,padding:"3px 10px",fontSize:12,display:"flex",alignItems:"center",gap:4,color:"var(--tx)"}}>
+        {c}<IBtn onClick={()=>setCats(p=>p.filter((_,j)=>j!==i))} danger>✕</IBtn>
+      </div>)}
+    </div>
+  </div>;
+}
+
+/* ── Charts ── */
+function MiniBar({data}){
+  const max=Math.max(...data.map(d=>Math.max(d.inc,d.exp)),1);
+  return<div style={{display:"flex",alignItems:"flex-end",gap:4,height:72}}>
+    {data.map((d,i)=><div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+      <div style={{width:"100%",display:"flex",gap:1,alignItems:"flex-end",height:58}}>
+        <div style={{flex:1,background:"var(--em)",borderRadius:"2px 2px 0 0",height:`${(d.inc/max)*100}%`,minHeight:2,opacity:.85}}/>
+        <div style={{flex:1,background:"var(--coral)",borderRadius:"2px 2px 0 0",height:`${(d.exp/max)*100}%`,minHeight:2,opacity:.85}}/>
+      </div>
+      <div style={{fontSize:9,color:"var(--muted)"}}>{d.label}</div>
+    </div>)}
+  </div>;
+}
+function Donut({slices,size=88}){
+  const COLS=["var(--coral)","var(--violet)","var(--amber)","var(--em)","var(--blue)","#FF8C42"];
+  const total=slices.reduce((s,x)=>s+(x.value||0),0);
+  if(!total)return<div style={{width:size,height:size,borderRadius:"50%",background:"var(--bd)"}}/>;
+  let off=0;const r=40,circ=2*Math.PI*r;
+  return<svg width={size} height={size} viewBox="0 0 100 100">
+    {slices.map((s,i)=>{const pct=s.value/total,dash=pct*circ,gap=circ-dash;
+      const el=<circle key={i} cx={50} cy={50} r={r} fill="none" stroke={s.color||COLS[i%COLS.length]} strokeWidth={18}
+        strokeDasharray={`${dash} ${gap}`} strokeDashoffset={-off*circ}
+        style={{transform:"rotate(-90deg)",transformOrigin:"50% 50%"}}/>;off+=pct;return el;})}
+    <circle cx={50} cy={50} r={31} fill="var(--card)"/>
+  </svg>;
+}
+
+/* ══════════════════════════════════════
+   SHEETS SYNC
+══════════════════════════════════════ */
+function SyncBadge({s}){
+  if(!s||s==="idle")return null;
+  const m={syncing:{bg:"var(--blue)22",col:"var(--blue)",t:"กำลัง sync..."},
+    ok:{bg:"var(--em)22",col:"var(--em)",t:"✓ Synced"},
+    error:{bg:"var(--coral)22",col:"var(--coral)",t:"⚠ ล้มเหลว"}};
+  const c=m[s]||{};
+  return<span className={s==="syncing"?"syncing":""} style={{fontSize:11,fontWeight:600,padding:"3px 10px",borderRadius:20,background:c.bg,color:c.col}}>{c.t}</span>;
+}
+
+function SheetsSync({getState,setAll,setSS}){
+  const[url,setUrl]=useState(()=>localStorage.getItem(SHEETS_URL)||"");
+  const[cfg,setCfg]=useState(false);
+  const[saving,setSaving]=useState(false);
+  const toast=useToast();
+  const ref=useRef();ref.current=getState;
+
+  const sync=useCallback(async(dir,silent=false)=>{
+    const ep=localStorage.getItem(SHEETS_URL);
+    if(!ep){if(!silent)setCfg(true);return;}
+    setSS("syncing");
+    try{
+      if(dir==="push"){
+        const r=await fetch(ep,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({v:9,...ref.current(),pushedAt:nowIso()})});
+        const d=await r.json();if(d.error)throw new Error(d.error);
+        localStorage.setItem(LAST_PUSH,nowIso());
+        setSS("ok");setTimeout(()=>setSS("idle"),2500);
+        if(!silent)toast("✅ Push สำเร็จ","ok");
+      }else{
+        const r=await fetch(ep+"?ts="+Date.now());
+        const d=await r.json();if(d.error)throw new Error(d.error);
+        const shTs=d.pushedAt||"",lcTs=localStorage.getItem(LAST_PUSH)||"";
+        if(!silent&&shTs&&lcTs&&shTs<=lcTs){toast("Sheets เก่ากว่า local — ไม่ overwrite","warn");setSS("idle");return;}
+        setAll(d);localStorage.setItem(LAST_PUSH,shTs||nowIso());
+        setSS("ok");setTimeout(()=>setSS("idle"),2500);
+        if(!silent)toast("✅ Pull สำเร็จ","ok");
+      }
+    }catch(e){setSS("error");setTimeout(()=>setSS("idle"),4000);if(!silent)toast("❌ "+e.message,"error");}
+  },[setSS,toast]);
+
+  useEffect(()=>{if(!localStorage.getItem(SHEETS_URL))return;const t=setInterval(()=>sync("push",true),AUTO_MS);return()=>clearInterval(t);},[sync]);
+  const pulled=useRef(false);
+  useEffect(()=>{if(pulled.current||!localStorage.getItem(SHEETS_URL))return;pulled.current=true;setTimeout(()=>sync("pull",true),900);},[sync]);
+
+  const saveUrl=()=>{localStorage.setItem(SHEETS_URL,url.trim());setSaving(true);setTimeout(()=>{setSaving(false);setCfg(false);sync("pull",false);},400);};
+
+  return<div style={{position:"relative"}}>
+    <div style={{display:"flex",gap:5,alignItems:"center"}}>
+      <Btn sm col="var(--em)" style={{color:"var(--ink)"}} onClick={()=>sync("push")}>⬆</Btn>
+      <Btn sm col="var(--blue)" onClick={()=>sync("pull")}>⬇</Btn>
+      <IBtn onClick={()=>setCfg(p=>!p)} title="ตั้งค่า">⚙</IBtn>
+      <span style={{fontSize:9,color:"var(--muted)"}}>auto 5m</span>
+    </div>
+    {cfg&&<div style={{position:"absolute",top:"110%",right:0,background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:14,width:"min(340px,90vw)",zIndex:200,boxShadow:"0 6px 24px var(--shadow)"}}>
+      <div style={{fontSize:12,fontWeight:700,color:"var(--tx)",marginBottom:6}}>Apps Script URL</div>
+      <div style={{fontSize:11,color:"var(--muted)",marginBottom:8,lineHeight:1.5}}>
+        Sheets → Extensions → Apps Script → วาง code → Deploy → Web App<br/>Execute as Me · Access Anyone → Copy URL
+      </div>
+      <Inp placeholder="https://script.google.com/macros/s/..." value={url} onChange={e=>setUrl(e.target.value)} style={{marginBottom:8,fontSize:12}}/>
+      <div style={{display:"flex",gap:6}}>
+        <Btn sm col="var(--em)" style={{color:"var(--ink)"}} onClick={saveUrl}>{saving?"✓ Saved!":"บันทึก + Pull"}</Btn>
+        <Btn sm col="var(--bd)" style={{color:"var(--sub)"}} onClick={()=>setCfg(false)}>ยกเลิก</Btn>
+      </div>
+    </div>}
+  </div>;
+}
+
+/* ══════════════════════════════════════
+   PENDING MODALS
+══════════════════════════════════════ */
+function PendExpModal({item,pockets,setPockets,setExpenses,setInstallments,onClose}){
+  const toast=useToast();
+  const[mode,setMode]=useState("expense");
+  const[cat,setCat]=useState(item.category||"อื่นๆ");
+  const[desc,setDesc]=useState(item.desc||"");
+  const[amt,setAmt]=useState(String(item.totalCost||item.amount||""));
+  const[month,setMonth]=useState(item.month||thisMonth());
+  const[pid,setPid]=useState("");
+  const[mo,setMo]=useState("");const[tm,setTm]=useState("");
+  const selPk=pid?pockets.find(p=>p.id===pid):null;
+  const confirm=()=>{
+    const a=parseFloat(amt)||0;if(!a){toast("กรุณากรอกจำนวนเงิน","warn");return;}
+    if(mode==="install"){
+      if(!mo||!tm){toast("กรุณากรอกยอดผ่อนและงวด","warn");return;}
+      setInstallments(p=>[...p,{id:uid(),name:desc,category:cat,totalAmount:a,monthly:parseFloat(mo),totalMonths:parseInt(tm),startMonth:month,cur:item.cur||"THB"}]);
+      toast("✅ บันทึกยอดผ่อน","ok");
+    }else{
+      setExpenses(p=>[...p,{id:uid(),category:cat,desc,amount:a,month,cur:item.cur||"THB",payMethod:selPk?selPk.name:"เงินสด",payPocketId:pid||"",ccDeferred:false}]);
+      if(selPk)setPockets(p=>p.map(x=>x.id===selPk.id?{...x,amount:Math.max(0,x.amount-a)}:x));
+      toast("✅ บันทึกรายจ่าย","ok");
+    }
+    onClose();
+  };
+  return<Modal title="✅ ยืนยันรายจ่ายจาก Slip" onClose={onClose}>
+    <div style={{background:"var(--surface)",borderRadius:10,padding:12,marginBottom:12}}>
+      <div style={{fontSize:11,color:"var(--muted)",marginBottom:4}}>จาก Slip</div>
+      <div style={{fontSize:15,fontWeight:700,color:"var(--tx)"}}>{item.desc} — {fmtC(item.totalCost||item.amount,item.cur||"THB")}</div>
+      {item.date&&<div style={{fontSize:11,color:"var(--muted)"}}>{item.date}</div>}
+    </div>
+    <div style={{display:"flex",gap:6,marginBottom:14}}>
+      <Btn sm col={mode==="expense"?"var(--coral)":"var(--bd)"} style={{color:mode==="expense"?"#fff":"var(--sub)"}} onClick={()=>setMode("expense")}>รายจ่ายปกติ</Btn>
+      <Btn sm col={mode==="install"?"var(--amber)":"var(--bd)"} style={{color:mode==="install"?"#fff":"var(--sub)"}} onClick={()=>setMode("install")}>ยอดผ่อน</Btn>
+    </div>
+    <div className="fg2" style={{marginBottom:12}}>
+      <FW label="รายละเอียด"><Inp value={desc} onChange={e=>setDesc(e.target.value)}/></FW>
+      <FW label="จำนวนเงิน"><Inp type="number" value={amt} onChange={e=>setAmt(e.target.value)}/></FW>
+      <FW label="หมวดหมู่"><Sel value={cat} onChange={e=>setCat(e.target.value)}>{["อาหาร","เดินทาง","สาธารณูปโภค","ความบันเทิง","สุขภาพ","การศึกษา","ช้อปปิ้ง","อื่นๆ"].map(c=><option key={c}>{c}</option>)}</Sel></FW>
+      <FW label="เดือน"><Inp type="month" value={month} onChange={e=>setMonth(e.target.value)}/></FW>
+    </div>
+    {mode==="expense"&&<div style={{marginBottom:12}}>
+      <FW label="หักจาก Pocket (ไม่บังคับ)">
+        <Sel value={pid} onChange={e=>setPid(e.target.value)}>
+          <option value="">เงินสด / ไม่หัก</option>
+          {pockets.map(p=><option key={p.id} value={p.id}>{p.name} ({fmt(p.amount)})</option>)}
+        </Sel>
+      </FW>
+      {selPk&&<div style={{fontSize:12,marginTop:4,color:(parseFloat(amt)||0)<=selPk.amount?"var(--em)":"var(--coral)"}}>ยอดหลังหัก: {fmt(selPk.amount-(parseFloat(amt)||0))}</div>}
+    </div>}
+    {mode==="install"&&<div className="fg2" style={{marginBottom:12,padding:10,background:"var(--surface)",borderRadius:8}}>
+      <FW label="ผ่อน/เดือน"><Inp type="number" value={mo} onChange={e=>setMo(e.target.value)}/></FW>
+      <FW label="จำนวนงวด"><Inp type="number" value={tm} onChange={e=>setTm(e.target.value)}/></FW>
+      {mo&&tm&&<div style={{gridColumn:"span 2",fontSize:12,color:"var(--amber)"}}>รวม {fmt(parseFloat(mo)*parseInt(tm))} · จบ {mLbl(addM(month,parseInt(tm)-1))}</div>}
+    </div>}
+    <div style={{display:"flex",gap:8}}>
+      <Btn col={mode==="install"?"var(--amber)":"var(--coral)"} onClick={confirm}>✓ ยืนยัน</Btn>
+      <Btn col="var(--bd)" style={{color:"var(--sub)"}} onClick={onClose}>ยกเลิก</Btn>
+    </div>
+  </Modal>;
+}
+
+function PendInvModal({item,pockets,setPockets,setInvestments,savedNames,setSavedNames,onClose}){
+  const toast=useToast();
+  const[action,setAction]=useState(item.action||"buy");
+  const[type,setType]=useState(item.type||"หุ้น");
+  const[name,setName]=useState(item.name||"");
+  const[date,setDate]=useState(item.date||today());
+  const[qty,setQty]=useState(String(item.qty||""));
+  const[price,setPrice]=useState(String(item.price||""));
+  const[fee,setFee]=useState(String(item.fee||""));
+  const[tc,setTc]=useState(String(item.totalCost||""));
+  const[cur,setCur]=useState(item.cur||"USD");
+  const[fpid,setFpid]=useState("");
+  const trader=pockets.find(p=>p.id===TRADER_PID||p.name==="TRADER");
+  const confirm=()=>{
+    const q=parseFloat(qty)||0,pr=parseFloat(price)||0,f=parseFloat(fee)||0,tot=parseFloat(tc)||q*pr+f;
+    if(!name||!q||!pr){toast("กรุณากรอก ชื่อ/จำนวน/ราคา","warn");return;}
+    const nm=name.trim();
+    setInvestments(p=>[...p,{id:uid(),action,type,name:nm,key:nm.toUpperCase(),date,qty:q,price:pr,fee:f,totalCost:tot,cur}]);
+    if(nm&&!savedNames.includes(nm))setSavedNames(p=>[...p,nm]);
+    if(action==="buy"&&fpid){const pk=pockets.find(p=>p.id===fpid);if(pk)setPockets(p=>p.map(x=>x.id===pk.id?{...x,amount:Math.max(0,x.amount-tot)}:x));}
+    if(action==="sell"){if(trader)setPockets(p=>p.map(x=>x.id===trader.id?{...x,amount:x.amount+tot}:x));else toast("⚠ ไม่พบ Pocket TRADER","warn");}
+    toast(`✅ บันทึกการ${action==="buy"?"ซื้อ":"ขาย"}`,"ok");onClose();
+  };
+  return<Modal title={action==="buy"?"🛒 ยืนยันการซื้อ":"💰 ยืนยันการขาย"} onClose={onClose}>
+    <div style={{display:"flex",gap:6,marginBottom:14}}>
+      <Btn sm col={action==="buy"?"var(--em)":"var(--bd)"} style={{color:action==="buy"?"var(--ink)":"var(--sub)"}} onClick={()=>setAction("buy")}>ซื้อ</Btn>
+      <Btn sm col={action==="sell"?"var(--coral)":"var(--bd)"} style={{color:action==="sell"?"#fff":"var(--sub)"}} onClick={()=>setAction("sell")}>ขาย</Btn>
+    </div>
+    <div className="fg2" style={{marginBottom:12}}>
+      <FW label="ประเภท"><Sel value={type} onChange={e=>setType(e.target.value)}>{["ทองคำ","หุ้น","กองทุน","คริปโต","อื่นๆ"].map(t=><option key={t}>{t}</option>)}</Sel></FW>
+      <FW label="ชื่อ"><Inp value={name} onChange={e=>setName(e.target.value)}/></FW>
+      <FW label="วันที่"><Inp type="date" value={date} onChange={e=>setDate(e.target.value)}/></FW>
+      <FW label="สกุลเงิน"><Sel value={cur} onChange={e=>setCur(e.target.value)}>{["USD","THB","EUR","JPY","GBP","SGD"].map(c=><option key={c}>{c}</option>)}</Sel></FW>
+      <FW label="จำนวน"><Inp type="number" step="any" value={qty} onChange={e=>setQty(e.target.value)}/></FW>
+      <FW label="ราคา/หน่วย"><Inp type="number" step="any" value={price} onChange={e=>setPrice(e.target.value)}/></FW>
+      <FW label="ค่าธรรมเนียม"><Inp type="number" step="any" value={fee} onChange={e=>setFee(e.target.value)}/></FW>
+      <FW label="ยอดรวม"><Inp type="number" step="any" value={tc} onChange={e=>setTc(e.target.value)}/></FW>
+    </div>
+    {action==="buy"&&<div style={{marginBottom:12}}>
+      <FW label="หักจาก Pocket (ไม่บังคับ)">
+        <Sel value={fpid} onChange={e=>setFpid(e.target.value)}>
+          <option value="">— ไม่หัก —</option>
+          {pockets.map(p=><option key={p.id} value={p.id}>{p.name} ({fmtC(p.amount,cur)})</option>)}
+        </Sel>
+      </FW>
+    </div>}
+    {action==="sell"&&<div style={{padding:"10px 12px",background:"var(--em)15",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--em)",fontWeight:600}}>
+      💰 เงินเข้า TRADER Pocket อัตโนมัติ
+      {!trader&&<div style={{color:"var(--amber)",fontWeight:400,marginTop:4}}>⚠ ยังไม่มี Pocket TRADER</div>}
+    </div>}
+    <div style={{display:"flex",gap:8}}>
+      <Btn col={action==="buy"?"var(--em)":"var(--coral)"} style={{color:action==="buy"?"var(--ink)":"#fff"}} onClick={confirm}>✓ ยืนยัน</Btn>
+      <Btn col="var(--bd)" style={{color:"var(--sub)"}} onClick={onClose}>ยกเลิก</Btn>
+    </div>
+  </Modal>;
+}
+
+/* ══════════════════════════════════════
+   MOBILE HOME
+══════════════════════════════════════ */
+function MobileHome({incomes,expenses,installments,pockets,setPockets,pendingItems,setPendingItems,setExpenses,setInstallments,setInvestments,savedNames,setSavedNames,setTab}){
+  const mobile=useIsMobile();
+  const toast=useToast();
+  const[slipSt,setSlipSt]=useState(null);
+  const[showKey,setShowKey]=useState(false);
+  const[pendMdl,setPendMdl]=useState(null);
+
+  const vm=thisMonth();
+  const inc=useMemo(()=>incomes.filter(e=>e.month===vm).reduce((s,e)=>s+e.amount,0),[incomes,vm]);
+  const exp=useMemo(()=>expenses.filter(e=>e.month===vm).reduce((s,e)=>s+e.amount,0),[expenses,vm]);
+  const instDue=useMemo(()=>installments.filter(i=>{const[sy,sm]=i.startMonth.split("-").map(Number);const[vy,vm2]=vm.split("-").map(Number);const d=(vy-sy)*12+(vm2-sm);return d>=0&&d<i.totalMonths;}).reduce((s,i)=>s+i.monthly,0),[installments,vm]);
+  const disp=inc-exp-instDue;
+  const mainPk=pockets.find(p=>p.isMain);
+  const pendingExp=pendingItems.filter(x=>x.source==="expense");
+  const pendingInv=pendingItems.filter(x=>x.source==="invest");
+  const totalPend=pendingItems.length;
+
+  // Recent transactions (last 5)
+  const recent=useMemo(()=>{
+    const exps=expenses.map(e=>({...e,_type:"exp",_date:e.month+"-01"}));
+    const incs=incomes.map(e=>({...e,_type:"inc",_date:e.month+"-01"}));
+    return[...exps,...incs].sort((a,b)=>b._date.localeCompare(a._date)).slice(0,5);
+  },[expenses,incomes]);
+
+  const[slipErr,setSlipErr]=useState("");
+  const readSlip=async file=>{
+    if(!localStorage.getItem(GEMINI_KEY)){setSlipSt("nokey");setShowKey(true);return;}
+    setSlipSt("loading");setSlipErr("");
+    try{
+      const prompt='Look at this financial slip/receipt image carefully. Return ONLY a JSON object, no markdown, no explanation. Detect if it is an investment/stock trade or an expense. JSON format: {"_slipType":"invest or expense","desc":"description","amount":number,"date":"YYYY-MM-DD","category":"food/transport/utility/entertainment/health/education/shopping/other","cur":"THB or USD","action":"buy or sell","type":"stock/gold/fund/crypto/other","name":"asset name if investment","qty":quantity_number,"price":price_per_unit_number,"fee":fee_number,"totalCost":total_amount_number}';
+      const raw=await readSlipGemini(file,prompt);
+      let d;
+      try{d=JSON.parse(raw);}catch{throw new Error("Gemini ตอบไม่ใช่ JSON: "+raw.slice(0,80));}
+      if(d._slipType==="invest"||d.action||d.name){
+        const p={id:uid(),source:"invest",action:d.action||"buy",type:d.type||"หุ้น",name:d.name||d.desc||"",date:d.date||today(),qty:parseFloat(d.qty)||0,price:parseFloat(d.price)||0,fee:parseFloat(d.fee)||0,totalCost:parseFloat(d.totalCost||d.amount)||0,cur:d.cur||"USD",createdAt:nowIso()};
+        setPendingItems(p2=>[...p2,p]);setSlipSt("ok");setPendMdl({...p,_mode:"invest"});
+      }else{
+        const p={id:uid(),source:"expense",desc:d.desc||"",amount:parseFloat(d.amount)||0,totalCost:parseFloat(d.amount)||0,date:d.date||today(),category:d.category||"อื่นๆ",cur:d.cur||"THB",month:d.date?d.date.slice(0,7):thisMonth(),createdAt:nowIso()};
+        setPendingItems(p2=>[...p2,p]);setSlipSt("ok");setPendMdl({...p,_mode:"expense"});
+      }
+    }catch(err){
+      const msg=err.message==="NO_KEY"?"nokey":"error";
+      setSlipSt(msg);setSlipErr(err.message||"");
+      if(err.message==="NO_KEY")setShowKey(true);
+    }
+  };
+
+  const ref=useRef();
+  const handleFile=e=>{const f=e.target.files[0];if(f)readSlip(f);e.target.value="";};
+
+  return<div style={{display:"flex",flexDirection:"column",gap:0}}>
+    {pendMdl&&pendMdl._mode==="expense"&&<PendExpModal item={pendMdl} pockets={pockets} setPockets={setPockets} setExpenses={setExpenses} setInstallments={setInstallments} onClose={()=>{setPendingItems(p=>p.filter(x=>x.id!==pendMdl.id));setPendMdl(null);}}/>}
+    {pendMdl&&pendMdl._mode==="invest"&&<PendInvModal item={pendMdl} pockets={pockets} setPockets={setPockets} setInvestments={setInvestments} savedNames={savedNames} setSavedNames={setSavedNames} onClose={()=>{setPendingItems(p=>p.filter(x=>x.id!==pendMdl.id));setPendMdl(null);}}/>}
+    {/* Hero */}
+    <div style={{background:"linear-gradient(160deg,#1D4060,#0D1B24)",padding:"20px 16px 16px",margin:"0 -12px"}}>
+      <div style={{fontSize:11,color:"#5A7A90",marginBottom:8,letterSpacing:".04em"}}>ใช้ได้จริงเดือนนี้</div>
+      <div style={{fontSize:38,fontWeight:600,color:"#D8EAF4",lineHeight:1,marginBottom:8}}>{fmt(disp)}</div>
+      <div style={{display:"flex",gap:20}}>
+        <div style={{display:"flex",alignItems:"center",gap:5}}>
+          <span style={{width:7,height:7,borderRadius:"50%",background:"#1DB870",display:"inline-block"}}/>
+          <span style={{fontSize:12,color:"#1DB870"}}>{fmt(inc)}</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:5}}>
+          <span style={{width:7,height:7,borderRadius:"50%",background:"#E05040",display:"inline-block"}}/>
+          <span style={{fontSize:12,color:"#E05040"}}>{fmt(exp+instDue)}</span>
+        </div>
+      </div>
+    </div>
+
+    {/* Quick actions */}
+    <div style={{padding:"14px 0 10px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+      {/* Scan slip — BIG primary */}
+      <div onClick={()=>ref.current?.click()} style={{background:"var(--em)",borderRadius:14,padding:"16px 12px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,cursor:"pointer",userSelect:"none"}}>
+        <input ref={ref} type="file" accept="image/*,image/heic,image/heif" style={{display:"none"}} onChange={handleFile}/>
+        <span style={{fontSize:30}}>📷</span>
+        <span style={{fontSize:13,fontWeight:700,color:"var(--ink)"}}>สแกน Slip</span>
+        {slipSt==="loading"&&<span style={{fontSize:10,color:"var(--ink)",opacity:.7}} className="syncing">กำลังอ่าน...</span>}
+        {slipSt==="ok"&&<span style={{fontSize:10,color:"var(--ink)",opacity:.7}}>✓ อ่านสำเร็จ</span>}
+        {slipSt==="error"&&<span style={{fontSize:10,color:"var(--ink)",opacity:.7}}>❌ ลองใหม่</span>}
+      </div>
+      {/* Quick add */}
+      <div onClick={()=>setTab("expense")} style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:"16px 12px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,cursor:"pointer"}}>
+        <span style={{fontSize:30}}>✏️</span>
+        <span style={{fontSize:13,fontWeight:700,color:"var(--tx)"}}>กรอกเอง</span>
+        <span style={{fontSize:10,color:"var(--muted)"}}>รายรับ / รายจ่าย</span>
+      </div>
+    </div>
+
+    {showKey&&<div style={{marginBottom:10}}><GeminiCfg onClose={()=>setShowKey(false)}/></div>}
+    {slipErr&&slipSt==="error"&&<div style={{background:"var(--coral)18",border:"0.5px solid var(--coral)50",borderRadius:10,padding:"8px 12px",marginBottom:10,fontSize:11,color:"var(--coral)"}}>{slipErr}</div>}
+
+    {/* Pending alert */}
+    {totalPend>0&&<div style={{background:"var(--amber)18",border:"0.5px solid var(--amber)50",borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:10,cursor:"pointer"}} onClick={()=>setTab(pendingExp.length?"expense":"invest")}>
+      <span style={{background:"var(--amber)",color:"var(--ink)",borderRadius:99,fontSize:11,fontWeight:700,padding:"1px 7px",minWidth:22,textAlign:"center"}}>{totalPend}</span>
+      <span style={{fontSize:13,color:"var(--amber)",fontWeight:600}}>slip รอยืนยัน — แตะเพื่อดู</span>
+    </div>}
+
+    {/* Recent */}
+    <div style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,overflow:"hidden",marginBottom:10}}>
+      <div style={{padding:"10px 14px",borderBottom:"0.5px solid var(--bd)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <SL style={{margin:0}}>รายการล่าสุด</SL>
+        <span style={{fontSize:11,color:"var(--blue)",cursor:"pointer"}} onClick={()=>setTab("expense")}>ดูทั้งหมด</span>
+      </div>
+      {recent.length===0&&<div style={{padding:"1.5rem",textAlign:"center",color:"var(--muted)",fontSize:13}}>ยังไม่มีรายการ</div>}
+      {recent.map((r,i)=><div key={r.id} style={{padding:"10px 14px",display:"flex",alignItems:"center",gap:10,borderBottom:i<recent.length-1?"0.5px solid var(--bd)":"none"}}>
+        <div style={{width:32,height:32,borderRadius:9,background:r._type==="inc"?"var(--em)20":"var(--coral)20",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>
+          {r._type==="inc"?"💚":"💸"}
+        </div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:13,fontWeight:600,color:"var(--tx)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.desc||r.category}</div>
+          <div style={{fontSize:11,color:"var(--muted)"}}>{r.category||""} · {r.month}</div>
+        </div>
+        <span style={{fontSize:13,fontWeight:700,color:r._type==="inc"?"var(--em)":"var(--coral)",flexShrink:0}}>
+          {r._type==="inc"?"+":"-"}{fmtC(r.amount,r.cur||"THB")}
+        </span>
+      </div>)}
+    </div>
+
+    {/* Pocket mini */}
+    <div style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:"12px 14px",marginBottom:10}}>
+      <SL>Cloud Pockets</SL>
+      {pockets.slice(0,4).map((pk,i)=>{
+        const isT=pk.id===TRADER_PID||pk.name==="TRADER";
+        const COLS=["var(--em)","var(--blue)","var(--amber)","var(--violet)","var(--coral)"];
+        const col=isT?"var(--blue)":COLS[i%COLS.length];
+        const pct=pk.goal>0?clamp(Math.round(pk.amount/pk.goal*100),0,100):null;
+        return<div key={pk.id} style={{marginBottom:10}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+            <span style={{fontSize:12,color:"var(--sub)"}}>{isT?"💹 ":""}{pk.name}</span>
+            <span style={{fontSize:13,fontWeight:600,color:col}}>{isT?fmtC(pk.amount,"USD"):fmt(pk.amount)}</span>
+          </div>
+          {pct!==null&&<PBar pct={pct} col={col}/>}
+          {pct===null&&<div style={{height:3,background:"var(--bd)",borderRadius:2}}><div style={{height:3,background:col,width:"100%",borderRadius:2,opacity:.3}}/></div>}
+        </div>;
+      })}
+      <div style={{cursor:"pointer",textAlign:"center",fontSize:12,color:"var(--blue)",marginTop:6}} onClick={()=>setTab("saving")}>จัดการ Pockets →</div>
+    </div>
+  </div>;
+}
+
+/* ══════════════════════════════════════
+   DESKTOP OVERVIEW
+══════════════════════════════════════ */
+function DesktopOverview({incomes,expenses,installments,instPayments,pockets}){
+  const[vm,setVm]=useState(thisMonth());
+  const instDue=useMemo(()=>installments.filter(i=>{const[sy,sm]=i.startMonth.split("-").map(Number);const[vy,vm2]=vm.split("-").map(Number);const d=(vy-sy)*12+(vm2-sm);return d>=0&&d<i.totalMonths;}),[installments,vm]);
+  const inc=useMemo(()=>incomes.filter(e=>e.month===vm).reduce((s,e)=>s+e.amount,0),[incomes,vm]);
+  const exp=useMemo(()=>expenses.filter(e=>e.month===vm).reduce((s,e)=>s+e.amount,0),[expenses,vm]);
+  const instTot=instDue.reduce((s,i)=>s+i.monthly,0);
+  const ccDue=useMemo(()=>{const p=addM(vm,-1);return expenses.filter(e=>e.month===p&&e.payMethod==="บัตรเครดิต"&&e.ccDeferred).reduce((s,e)=>s+e.amount,0);},[expenses,vm]);
+  const disp=inc-exp-instTot-ccDue;
+  const totSav=pockets.reduce((s,p)=>s+p.amount,0);
+  const sr=inc>0?clamp(Math.round(disp/inc*100),0,100):0;
+  const COLS=["var(--coral)","var(--violet)","var(--amber)","var(--em)","var(--blue)","#FF8C42"];
+  const expCats=useMemo(()=>{const m={};expenses.filter(e=>e.month===vm).forEach(e=>{m[e.category]=(m[e.category]||0)+e.amount;});instDue.forEach(i=>{m["ผ่อนชำระ"]=(m["ผ่อนชำระ"]||0)+i.monthly;});return m;},[expenses,instDue,vm]);
+  const barData=useMemo(()=>Array.from({length:5},(_,i)=>{
+    const mk=addM(vm,i-2);
+    const ii=incomes.filter(e=>e.month===mk).reduce((s,e)=>s+e.amount,0);
+    const ee=expenses.filter(e=>e.month===mk).reduce((s,e)=>s+e.amount,0);
+    const iD=installments.filter(inst=>{const[sy,sm]=inst.startMonth.split("-").map(Number);const[vy,v2]=mk.split("-").map(Number);const d=(vy-sy)*12+(v2-sm);return d>=0&&d<inst.totalMonths;}).reduce((s,i)=>s+i.monthly,0);
+    return{label:mLbl(mk),inc:ii,exp:ee+iD};
+  }),[incomes,expenses,installments,vm]);
+
+  // Recent 6
+  const recent=useMemo(()=>{
+    const arr=[...expenses.map(e=>({...e,_t:"exp"})),...incomes.map(e=>({...e,_t:"inc"}))];
+    return arr.sort((a,b)=>b.month.localeCompare(a.month)).slice(0,6);
+  },[expenses,incomes]);
+
+  return<div style={{display:"flex",flexDirection:"column",gap:14}}>
+    {/* Month nav */}
+    <div style={{display:"flex",alignItems:"center",gap:10}}>
+      <IBtn onClick={()=>setVm(m=>addM(m,-1))}>‹</IBtn>
+      <span style={{fontWeight:700,fontSize:16,minWidth:90,textAlign:"center",color:"var(--tx)"}}>{mLbl(vm)}</span>
+      <IBtn onClick={()=>setVm(m=>addM(m,1))}>›</IBtn>
+      <Btn sm col="var(--surface)" style={{color:"var(--sub)",border:"1px solid var(--bd)"}} onClick={()=>setVm(thisMonth())}>เดือนนี้</Btn>
+    </div>
+
+    {/* KPI 5 col */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10}}>
+      {[
+        {label:"รายรับ",val:fmt(inc),col:"var(--em)",sub:`เดือน ${mLbl(vm)}`},
+        {label:"รายจ่าย",val:fmt(exp),col:"var(--coral)",sub:`${Object.keys(expCats).length} หมวด`},
+        {label:"ผ่อน + CC",val:fmt(instTot+ccDue),col:"var(--amber)",sub:`${instDue.length} รายการ`},
+        {label:"เงินเก็บรวม",val:fmt(totSav),col:"var(--violet)",sub:`${pockets.length} pockets`},
+        {label:"ใช้ได้จริง",val:fmt(disp),col:disp>=0?"var(--em)":"var(--coral)",sub:`อัตราออม ${sr}%`,hi:true},
+      ].map(k=><div key={k.label} style={{background:k.hi?"var(--em)12":k.col+"10",border:`0.5px solid ${k.hi?"var(--em)":"var(--bd)"}30`,borderRadius:12,padding:"12px 14px"}}>
+        <div style={{fontSize:10,color:k.hi?"var(--em)":"var(--muted)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:6}}>{k.label}</div>
+        <div style={{fontSize:20,fontWeight:600,color:k.col,lineHeight:1.1}}>{k.val}</div>
+        <div style={{fontSize:10,color:"var(--muted)",marginTop:3}}>{k.sub}</div>
+      </div>)}
+    </div>
+
+    {/* 3-col grid */}
+    <div style={{display:"grid",gridTemplateColumns:"1.5fr 1fr 0.9fr",gap:12}}>
+      {/* Chart */}
+      <Card>
+        <SL>รายรับ vs รายจ่าย (5 เดือน)</SL>
+        <MiniBar data={barData}/>
+        <div style={{display:"flex",gap:14,marginTop:8}}>
+          <span style={{fontSize:11,color:"var(--em)"}}>● รายรับ</span>
+          <span style={{fontSize:11,color:"var(--coral)"}}>● รายจ่าย</span>
+        </div>
+      </Card>
+
+      {/* Recent transactions */}
+      <Card style={{padding:0,overflow:"hidden"}}>
+        <div style={{padding:"10px 14px",borderBottom:"0.5px solid var(--bd)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <SL style={{margin:0}}>รายการล่าสุด</SL>
+        </div>
+        {recent.map((r,i)=><div key={r.id} style={{padding:"9px 14px",display:"flex",alignItems:"center",gap:10,borderBottom:i<recent.length-1?"0.5px solid var(--bd)":"none"}}>
+          <div style={{width:28,height:28,borderRadius:8,background:r._t==="inc"?"var(--em)20":"var(--coral)20",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>
+            {r._t==="inc"?"💚":"💸"}
+          </div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:12,fontWeight:600,color:"var(--tx)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.desc||r.category}</div>
+            <div style={{fontSize:10,color:"var(--muted)"}}>{r.month}</div>
+          </div>
+          <span style={{fontSize:12,fontWeight:700,color:r._t==="inc"?"var(--em)":"var(--coral)",flexShrink:0}}>
+            {r._t==="inc"?"+":"-"}{fmtC(r.amount,r.cur||"THB")}
+          </span>
+        </div>)}
+        {!recent.length&&<div style={{padding:"1.5rem",textAlign:"center",color:"var(--muted)",fontSize:13}}>ยังไม่มีรายการ</div>}
+      </Card>
+
+      {/* Pockets */}
+      <Card>
+        <SL>Cloud Pockets</SL>
+        {pockets.slice(0,5).map((pk,i)=>{
+          const isT=pk.id===TRADER_PID||pk.name==="TRADER";
+          const C2=["var(--em)","var(--blue)","var(--amber)","var(--violet)","var(--coral)"];
+          const col=isT?"var(--blue)":C2[i%C2.length];
+          const pct=pk.goal>0?clamp(Math.round(pk.amount/pk.goal*100),0,100):null;
+          return<div key={pk.id} style={{marginBottom:10}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+              <span style={{fontSize:11,color:"var(--sub)"}}>{isT?"💹 ":""}{pk.name}</span>
+              <span style={{fontSize:11,fontWeight:600,color:col}}>{isT?fmtC(pk.amount,"USD"):fmt(pk.amount)}</span>
+            </div>
+            {pct!==null?<PBar pct={pct} col={col}/>:<div style={{height:3,background:col+"30",borderRadius:2}}/>}
+          </div>;
+        })}
+        <div style={{marginTop:10,paddingTop:10,borderTop:"0.5px solid var(--bd)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+            <span style={{fontSize:11,color:"var(--muted)"}}>อัตราออม</span>
+            <span style={{fontSize:12,fontWeight:600,color:sr>=20?"var(--em)":sr>=10?"var(--amber)":"var(--coral)"}}>{sr}%</span>
+          </div>
+          <PBar pct={sr} col={sr>=20?"var(--em)":sr>=10?"var(--amber)":"var(--coral)"}/>
+        </div>
+      </Card>
+    </div>
+
+    {/* Expense breakdown */}
+    {Object.keys(expCats).length>0&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+      <Card>
+        <SL>สัดส่วนรายจ่าย</SL>
+        <div style={{display:"flex",alignItems:"center",gap:16}}>
+          <Donut slices={Object.entries(expCats).map(([k,v],i)=>({value:v,color:COLS[i%COLS.length]}))} size={90}/>
+          <div style={{flex:1}}>{Object.entries(expCats).map(([k,v],i)=><div key={k} style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:4}}><span style={{color:COLS[i%COLS.length]}}>● {k}</span><span style={{color:"var(--muted)"}}>{fmt(v)}</span></div>)}</div>
+        </div>
+      </Card>
+      {instDue.length>0&&<Card>
+        <SL>ยอดผ่อนเดือนนี้</SL>
+        {instDue.map(inst=>{const[sy,sm]=inst.startMonth.split("-").map(Number);const[vy,vm2]=vm.split("-").map(Number);const paid=(vy-sy)*12+(vm2-sm)+1;const isPaid=instPayments.some(p=>p.instId===inst.id&&p.month===vm);
+          return<div key={inst.id} style={{marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:13,color:"var(--tx)"}}>{inst.name}</span><div style={{display:"flex",alignItems:"center",gap:8}}>{isPaid?<Badge label="✓" color="var(--em)"/>:<Badge label="ค้าง" color="var(--amber)"/>}<span style={{fontWeight:600,color:"var(--amber)"}}>{fmt(inst.monthly)}</span></div></div><PBar pct={Math.round(paid/inst.totalMonths*100)} col={isPaid?"var(--em)":"var(--amber)"}/></div>;
+        })}
+      </Card>}
+    </div>}
+  </div>;
+}
+
+/* ══════════════════════════════════════
+   INCOME TAB
+══════════════════════════════════════ */
+function IncomeTab({incomes,setIncomes,cats,setCats,pockets,setPockets,currencies}){
+  const toast=useToast();const{ask,Dialog}=useConfirm();
+  const[f,setF]=useState({cat:cats[0]||"เงินเดือน",desc:"",amount:"",month:thisMonth(),cur:"THB"});
+  const[showCM,setSCM]=useState(false);const[search,setSearch]=useState("");
+  const mainPk=pockets.find(p=>p.isMain);
+  const add=()=>{
+    if(!f.desc||!f.amount){toast("กรุณากรอกรายละเอียดและจำนวนเงิน","warn");return;}
+    const amt=parseFloat(f.amount);
+    setIncomes(p=>[...p,{id:uid(),category:f.cat,desc:f.desc,amount:amt,month:f.month,cur:f.cur}]);
+    if(mainPk)setPockets(p=>p.map(pk=>pk.isMain?{...pk,amount:pk.amount+amt}:pk));
+    toast("✅ เพิ่มรายรับ","ok");setF(p=>({...p,desc:"",amount:""}));
+  };
+  const del=async e=>{
+    const ok=await ask(`ลบ "${e.desc}" ${fmtC(e.amount,e.cur||"THB")}?`);
+    if(!ok)return;
+    if(mainPk)setPockets(p=>p.map(pk=>pk.isMain?{...pk,amount:Math.max(0,pk.amount-e.amount)}:pk));
+    setIncomes(p=>p.filter(x=>x.id!==e.id));toast("ลบแล้ว","ok");
+  };
+  const filtered=useMemo(()=>[...incomes].reverse().filter(e=>!search||e.desc.includes(search)||e.category.includes(search)),[incomes,search]);
+  return<div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
+    {Dialog}
+    <Card>
+      <SL>เพิ่มรายรับ</SL>
+      <div className="fg2" style={{marginBottom:10}}>
+        <FW label="หมวดหมู่"><Sel value={f.cat} onChange={e=>setF(p=>({...p,cat:e.target.value}))}>{cats.map(c=><option key={c}>{c}</option>)}</Sel></FW>
+        <FW label="รายละเอียด"><Inp placeholder="เช่น เงินเดือน ม.ค." value={f.desc} onChange={e=>setF(p=>({...p,desc:e.target.value}))}/></FW>
+        <FW label="จำนวนเงิน"><div style={{display:"flex",gap:6}}><Inp type="number" placeholder="0" value={f.amount} onChange={e=>setF(p=>({...p,amount:e.target.value}))} style={{flex:1}}/><CSel value={f.cur} onChange={v=>setF(p=>({...p,cur:v}))} currencies={currencies}/></div></FW>
+        <FW label="เดือน"><Inp type="month" value={f.month} onChange={e=>setF(p=>({...p,month:e.target.value}))}/></FW>
+      </div>
+      {mainPk&&<div style={{fontSize:12,color:"var(--em)",marginBottom:10}}>💡 เงินจะเข้า "{mainPk.name}" อัตโนมัติ</div>}
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        <Btn col="var(--em)" style={{color:"var(--ink)"}} onClick={add}>+ เพิ่มรายรับ</Btn>
+        <Btn col="var(--surface)" style={{color:"var(--sub)",border:"1px solid var(--bd)"}} onClick={()=>setSCM(p=>!p)}>จัดการหมวดหมู่</Btn>
+      </div>
+      {showCM&&<CatMgr cats={cats} setCats={setCats}/>}
+    </Card>
+    <Card>
+      <div style={{display:"flex",gap:8,marginBottom:10,alignItems:"center",flexWrap:"wrap"}}>
+        <SL style={{margin:0}}>รายรับทั้งหมด ({incomes.length})</SL>
+        <Inp placeholder="🔍 ค้นหา" value={search} onChange={e=>setSearch(e.target.value)} style={{maxWidth:180,marginLeft:"auto",padding:"6px 10px",fontSize:12}}/>
+      </div>
+      <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+        <thead><tr><TH>เดือน</TH><TH>หมวด</TH><TH>รายละเอียด</TH><TH right>จำนวน</TH><TH></TH></tr></thead>
+        <tbody>
+          {filtered.map(e=><tr key={e.id}><TD style={{fontSize:11,color:"var(--muted)"}}>{e.month}</TD><TD><Badge label={e.category} color="var(--em)"/></TD><TD>{e.desc}</TD><TD right style={{color:"var(--em)",fontWeight:600}}>{fmtC(e.amount,e.cur||"THB")}</TD><TD><IBtn onClick={()=>del(e)} danger>🗑</IBtn></TD></tr>)}
+          {!filtered.length&&<ERow cols={5} msg={search?"ไม่พบ":"ยังไม่มีข้อมูล"}/>}
+        </tbody>
+      </table></div>
+    </Card>
+  </div>;
+}
+
+/* ══════════════════════════════════════
+   EXPENSE TAB
+══════════════════════════════════════ */
+function ExpenseTab({expenses,setExpenses,expCats,setExpCats,installments,setInstallments,instPayments,setInstPayments,ccPayments,setCcPayments,pockets,setPockets,currencies,pendingItems,setPendingItems}){
+  const toast=useToast();const{ask,Dialog}=useConfirm();
+  const[f,setF]=useState({cat:expCats[0]||"อาหาร",desc:"",amount:"",month:thisMonth(),cur:"THB",pid:"",isInst:false,monthly:"",totalM:""});
+  const[vm,setVm]=useState(thisMonth());
+  const[showCM,setSCM]=useState(false);
+  const[payModal,setPayModal]=useState(null);
+  const[slipSt,setSlipSt]=useState(null);
+  const[showKey,setShowKey]=useState(false);
+  const[pendMdl,setPendMdl]=useState(null);
+  const[search,setSearch]=useState("");
+
+  const add=()=>{
+    if(!f.desc||!f.amount){toast("กรุณากรอกข้อมูล","warn");return;}
+    const amt=parseFloat(f.amount);
+    if(f.isInst){
+      if(!f.monthly||!f.totalM){toast("กรุณากรอกยอดผ่อนและงวด","warn");return;}
+      setInstallments(p=>[...p,{id:uid(),name:f.desc,category:f.cat,totalAmount:amt,monthly:parseFloat(f.monthly),totalMonths:parseInt(f.totalM),startMonth:f.month,cur:f.cur}]);
+      toast("✅ บันทึกยอดผ่อน","ok");
+    }else{
+      const sp=f.pid?pockets.find(p=>p.id===f.pid):null;
+      setExpenses(p=>[...p,{id:uid(),category:f.cat,desc:f.desc,amount:amt,month:f.month,cur:f.cur,payMethod:sp?sp.name:"เงินสด",payPocketId:f.pid||"",ccDeferred:false}]);
+      if(sp)setPockets(p=>p.map(x=>x.id===sp.id?{...x,amount:Math.max(0,x.amount-amt)}:x));
+      toast("✅ บันทึกรายจ่าย","ok");
+    }
+    setF(p=>({...p,desc:"",amount:"",monthly:"",totalM:"",isInst:false,pid:""}));
+  };
+
+  const delExp=async e=>{
+    const ok=await ask(`ลบ "${e.desc}" ${fmtC(e.amount,e.cur||"THB")}?`);
+    if(!ok)return;
+    if(e.payPocketId){const pk=pockets.find(p=>p.id===e.payPocketId);if(pk)setPockets(p=>p.map(x=>x.id===pk.id?{...x,amount:x.amount+e.amount}:x));}
+    setExpenses(p=>p.filter(x=>x.id!==e.id));toast("ลบแล้ว","ok");
+  };
+
+  const readSlip=async file=>{
+    if(!localStorage.getItem(GEMINI_KEY)){setSlipSt("nokey");setShowKey(true);return;}
+    setSlipSt("loading");
+    try{
+      const prompt='วิเคราะห์ slip ค่าใช้จ่ายนี้ ตอบ JSON เท่านั้น ไม่มี markdown: {"desc":"รายละเอียด","amount":จำนวนเงิน,"date":"YYYY-MM-DD","category":"อาหาร/เดินทาง/สาธารณูปโภค/ความบันเทิง/สุขภาพ/การศึกษา/ช้อปปิ้ง/อื่นๆ","cur":"THB/USD"}';
+      const raw=await readSlipGemini(file,prompt);
+      const d=JSON.parse(raw);
+      const p={id:uid(),source:"expense",desc:d.desc||"",amount:d.amount||0,totalCost:d.amount||0,date:d.date||today(),category:d.category||"อื่นๆ",cur:d.cur||"THB",month:d.date?d.date.slice(0,7):thisMonth(),createdAt:nowIso()};
+      setPendingItems(p2=>[...p2,p]);setSlipSt("ok");setPendMdl(p);
+    }catch(err){setSlipSt(err.message==="NO_KEY"?"nokey":"error");if(err.message==="NO_KEY")setShowKey(true);}
+  };
+
+  const instDue=useMemo(()=>installments.filter(i=>{const[sy,sm]=i.startMonth.split("-").map(Number);const[vy,v2]=vm.split("-").map(Number);const d=(vy-sy)*12+(v2-sm);return d>=0&&d<i.totalMonths;}),[installments,vm]);
+  const ccDue=useMemo(()=>{const p=addM(vm,-1);return expenses.filter(e=>e.month===p&&e.payMethod==="บัตรเครดิต"&&e.ccDeferred);},[expenses,vm]);
+  const ccTotal=ccDue.reduce((s,e)=>s+e.amount,0);
+  const ccPaid=ccPayments.some(p=>p.month===vm);
+  const expPend=pendingItems.filter(x=>x.source==="expense");
+  const filteredExp=useMemo(()=>expenses.filter(e=>e.month===vm&&(!search||e.desc.includes(search)||e.category.includes(search))),[expenses,vm,search]);
+
+  const doPay=m=>{
+    if(!m.from){toast("เลือก Pocket","warn");return;}
+    const pk=pockets.find(p=>p.id===m.from);
+    if(!pk||pk.amount<m.amount){toast("เงินไม่พอ","error");return;}
+    setPockets(p=>p.map(x=>x.id===m.from?{...x,amount:Math.max(0,x.amount-m.amount)}:x));
+    if(m.type==="inst")setInstPayments(p=>[...p,{id:uid(),instId:m.id,month:vm,amount:m.amount,fromPocketId:m.from,date:today()}]);
+    else setCcPayments(p=>[...p,{id:uid(),month:vm,amount:m.amount,fromPocketId:m.from,date:today()}]);
+    toast("✅ ชำระเรียบร้อย","ok");setPayModal(null);
+  };
+
+  return<div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
+    {Dialog}
+    {pendMdl&&<PendExpModal item={pendMdl} pockets={pockets} setPockets={setPockets} setExpenses={setExpenses} setInstallments={setInstallments} onClose={()=>{setPendingItems(p=>p.filter(x=>x.id!==pendMdl.id));setPendMdl(null);}}/>}
+
+    <Card style={{borderColor:"var(--violet)44"}}>
+      <SL>📎 อ่าน Slip รายจ่าย (Gemini AI)</SL>
+      {showKey&&<GeminiCfg onClose={()=>setShowKey(false)}/>}
+      <SlipZone onFile={readSlip} state={slipSt}/>
+      <Btn sm col="var(--surface)" style={{color:"var(--sub)",border:"1px solid var(--bd)"}} onClick={()=>setShowKey(p=>!p)}>🔑 Gemini Key</Btn>
+    </Card>
+
+    {expPend.length>0&&<Card style={{borderColor:"var(--amber)66",borderWidth:2}}>
+      <SL>⏳ รอยืนยัน ({expPend.length})</SL>
+      {expPend.map(item=><div key={item.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"0.5px solid var(--bd)"}}>
+        <div><div style={{fontSize:13,fontWeight:600,color:"var(--tx)"}}>{item.desc||"(ไม่มีชื่อ)"}</div><div style={{fontSize:11,color:"var(--muted)"}}>{item.date} · {fmtC(item.totalCost||item.amount,item.cur||"THB")}</div></div>
+        <div style={{display:"flex",gap:6}}>
+          <Btn sm col="var(--amber)" style={{color:"#fff"}} onClick={()=>setPendMdl(item)}>ยืนยัน</Btn>
+          <IBtn onClick={()=>setPendingItems(p=>p.filter(x=>x.id!==item.id))} danger>✕</IBtn>
+        </div>
+      </div>)}
+    </Card>}
+
+    <Card>
+      <SL>เพิ่มรายจ่าย</SL>
+      <div className="fg2" style={{marginBottom:10}}>
+        <FW label="หมวดหมู่"><Sel value={f.cat} onChange={e=>setF(p=>({...p,cat:e.target.value}))}>{expCats.map(c=><option key={c}>{c}</option>)}</Sel></FW>
+        <FW label="รายละเอียด"><Inp placeholder="เช่น ข้าวกะเพรา" value={f.desc} onChange={e=>setF(p=>({...p,desc:e.target.value}))}/></FW>
+        <FW label="จำนวนเงิน"><div style={{display:"flex",gap:6}}><Inp type="number" placeholder="0" value={f.amount} onChange={e=>setF(p=>({...p,amount:e.target.value}))} style={{flex:1}}/><CSel value={f.cur} onChange={v=>setF(p=>({...p,cur:v}))} currencies={currencies}/></div></FW>
+        <FW label="เดือน"><Inp type="month" value={f.month} onChange={e=>setF(p=>({...p,month:e.target.value}))}/></FW>
+        <FW label="หักจาก Pocket"><Sel value={f.pid} onChange={e=>setF(p=>({...p,pid:e.target.value}))}><option value="">เงินสด / ไม่หัก</option>{pockets.map(p=><option key={p.id} value={p.id}>{p.name} ({fmt(p.amount)})</option>)}</Sel></FW>
+        <FW label="ตัวเลือก"><div style={{paddingTop:6}}><label style={{display:"flex",alignItems:"center",gap:6,fontSize:13,cursor:"pointer",color:"var(--tx)"}}><input type="checkbox" checked={f.isInst} onChange={e=>setF(p=>({...p,isInst:e.target.checked}))}/> ยอดผ่อนชำระ</label></div></FW>
+      </div>
+      {f.isInst&&<div className="fg2" style={{marginBottom:10,padding:10,background:"var(--surface)",borderRadius:10}}>
+        <FW label="ผ่อน/เดือน"><Inp type="number" value={f.monthly} onChange={e=>setF(p=>({...p,monthly:e.target.value}))}/></FW>
+        <FW label="จำนวนงวด"><Inp type="number" value={f.totalM} onChange={e=>setF(p=>({...p,totalM:e.target.value}))}/></FW>
+        {f.monthly&&f.totalM&&<div style={{gridColumn:"span 2",fontSize:12,color:"var(--amber)"}}>รวม {fmt(parseFloat(f.monthly)*parseInt(f.totalM))} · สิ้นสุด {mLbl(addM(f.month,parseInt(f.totalM)-1))}</div>}
+      </div>}
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        <Btn col={f.isInst?"var(--amber)":"var(--em)"} style={{color:f.isInst?"#fff":"var(--ink)"}} onClick={add}>+ {f.isInst?"บันทึกยอดผ่อน":"เพิ่มรายจ่าย"}</Btn>
+        <Btn col="var(--surface)" style={{color:"var(--sub)",border:"1px solid var(--bd)"}} onClick={()=>setSCM(p=>!p)}>จัดการหมวดหมู่</Btn>
+      </div>
+      {showCM&&<CatMgr cats={expCats} setCats={setExpCats}/>}
+    </Card>
+
+    <Card>
+      <SL>Debt Manager</SL>
+      <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+        <thead><tr><TH>รายการ</TH><TH right>ยอดเต็ม</TH><TH right>ผ่อน/เดือน</TH><TH>คืบหน้า</TH><TH right>เหลือ</TH><TH></TH></tr></thead>
+        <tbody>
+          {installments.map(inst=>{const[sy,sm]=inst.startMonth.split("-").map(Number);const[cy,cm]=thisMonth().split("-").map(Number);const paid=clamp((cy-sy)*12+(cm-sm)+1,0,inst.totalMonths);const rem=(inst.totalMonths-paid)*inst.monthly;
+            return<tr key={inst.id}><TD><div style={{fontWeight:600,color:"var(--tx)"}}>{inst.name}</div><div style={{fontSize:11,color:"var(--muted)"}}>เริ่ม {mLbl(inst.startMonth)}</div></TD><TD right>{fmt(inst.totalAmount)}</TD><TD right style={{color:"var(--amber)",fontWeight:600}}>{fmt(inst.monthly)}</TD>
+              <TD style={{minWidth:90}}><div style={{fontSize:11,color:"var(--muted)",marginBottom:2}}>{paid}/{inst.totalMonths}</div><PBar pct={Math.round(paid/inst.totalMonths*100)} col={paid>=inst.totalMonths?"var(--em)":"var(--amber)"}/></TD>
+              <TD right style={{color:rem>0?"var(--coral)":"var(--em)"}}>{fmt(rem)}</TD>
+              <TD><IBtn onClick={async()=>{const ok=await ask(`ลบยอดผ่อน "${inst.name}"?`);if(ok){setInstallments(p=>p.filter(x=>x.id!==inst.id));toast("ลบแล้ว","ok");}}} danger>🗑</IBtn></TD>
+            </tr>;
+          })}
+          {!installments.length&&<ERow cols={6} msg="ยังไม่มียอดผ่อน"/>}
+        </tbody>
+      </table></div>
+    </Card>
+
+    <Card>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,flexWrap:"wrap"}}>
+        <SL style={{margin:0}}>รายจ่ายประจำเดือน</SL>
+        <div style={{display:"flex",gap:5,marginLeft:"auto",alignItems:"center"}}>
+          <Inp placeholder="🔍" value={search} onChange={e=>setSearch(e.target.value)} style={{width:100,padding:"5px 8px",fontSize:12}}/>
+          <IBtn onClick={()=>setVm(m=>addM(m,-1))}>‹</IBtn>
+          <span style={{fontSize:13,fontWeight:600,minWidth:70,textAlign:"center",color:"var(--tx)"}}>{mLbl(vm)}</span>
+          <IBtn onClick={()=>setVm(m=>addM(m,1))}>›</IBtn>
+        </div>
+      </div>
+      <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+        <thead><tr><TH>ประเภท</TH><TH>รายละเอียด</TH><TH>ชำระผ่าน</TH><TH right>จำนวน</TH><TH></TH></tr></thead>
+        <tbody>
+          {filteredExp.map(e=><tr key={e.id}><TD><Badge label="จ่าย" color="var(--coral)"/></TD><TD>{e.desc}</TD><TD style={{fontSize:11,color:"var(--muted)"}}>{e.payMethod||"-"}</TD><TD right style={{color:"var(--coral)",fontWeight:600}}>{fmtC(e.amount,e.cur||"THB")}</TD><TD><IBtn onClick={()=>delExp(e)} danger>🗑</IBtn></TD></tr>)}
+          {instDue.map(inst=>{const[sy,sm]=inst.startMonth.split("-").map(Number);const[vy,v2]=vm.split("-").map(Number);const paid=(vy-sy)*12+(v2-sm)+1;const isPaid=instPayments.some(p=>p.instId===inst.id&&p.month===vm);
+            return<tr key={inst.id}><TD><Badge label="ผ่อน" color="var(--amber)"/></TD><TD>{inst.name} <span style={{fontSize:11,color:"var(--muted)"}}>งวด {paid}/{inst.totalMonths}</span></TD><TD>-</TD>
+              <TD right style={{color:"var(--amber)",fontWeight:600}}>{fmt(inst.monthly)}</TD>
+              <TD>{isPaid?<Badge label="✓" color="var(--em)"/>:<Btn sm col="var(--amber)" style={{color:"#fff"}} onClick={()=>setPayModal({type:"inst",id:inst.id,month:vm,amount:inst.monthly,name:inst.name,from:""})}>ชำระ</Btn>}</TD>
+            </tr>;
+          })}
+          {ccDue.length>0&&<tr><TD><Badge label="CC ค้าง" color="var(--amber)"/></TD><TD>จาก {mLbl(addM(vm,-1))}</TD><TD>-</TD>
+            <TD right style={{color:"var(--amber)",fontWeight:700}}>{fmt(ccTotal)}</TD>
+            <TD>{ccPaid?<Badge label="✓" color="var(--em)"/>:<Btn sm col="var(--amber)" style={{color:"#fff"}} onClick={()=>setPayModal({type:"cc",month:vm,amount:ccTotal,name:`CC ${mLbl(addM(vm,-1))}`,from:""})}>ชำระ</Btn>}</TD>
+          </tr>}
+          {!filteredExp.length&&!instDue.length&&!ccDue.length&&<ERow cols={5}/>}
+        </tbody>
+      </table></div>
+    </Card>
+
+    {payModal&&<Modal title={`ชำระ: ${payModal.name}`} onClose={()=>setPayModal(null)}>
+      <div style={{padding:12,background:"var(--surface)",borderRadius:10,marginBottom:14}}><div style={{fontSize:12,color:"var(--muted)",marginBottom:4}}>ยอดที่ต้องชำระ</div><div style={{fontSize:24,fontWeight:800,color:"var(--amber)"}}>{fmt(payModal.amount)}</div></div>
+      <FW label="เลือก Pocket ที่จะชำระ"><Sel value={payModal.from||""} onChange={e=>setPayModal(p=>({...p,from:e.target.value}))}><option value="">— เลือก —</option>{pockets.map(p=><option key={p.id} value={p.id}>{p.name} ({fmt(p.amount)})</option>)}</Sel></FW>
+      {payModal.from&&(()=>{const pk=pockets.find(p=>p.id===payModal.from);return pk?<div style={{fontSize:12,color:pk.amount>=payModal.amount?"var(--em)":"var(--coral)",marginTop:6}}>ยอดหลังชำระ: {fmt(pk.amount-payModal.amount)}</div>:null;})()}
+      <div style={{display:"flex",gap:8,marginTop:14}}><Btn col="var(--em)" style={{color:"var(--ink)"}} onClick={()=>doPay(payModal)}>✓ ยืนยัน</Btn><Btn col="var(--bd)" style={{color:"var(--sub)"}} onClick={()=>setPayModal(null)}>ยกเลิก</Btn></div>
+    </Modal>}
+  </div>;
+}
+
+/* ══════════════════════════════════════
+   SAVING TAB
+══════════════════════════════════════ */
+function SavingTab({pockets,setPockets,transfers,setTransfers}){
+  const toast=useToast();const{ask,Dialog}=useConfirm();
+  const[f,setF]=useState({name:"",amount:"",goal:""});
+  const[tf,setTf]=useState({from:"",to:"",amount:""});
+  const[depMdl,setDepMdl]=useState(null);
+  const mainPk=pockets.find(p=>p.isMain)||{id:MAIN_PID,name:"Cash Box",amount:0,isMain:true};
+  const others=pockets.filter(p=>!p.isMain);
+  const total=pockets.reduce((s,p)=>s+p.amount,0);
+  const trader=pockets.find(p=>p.id===TRADER_PID||p.name==="TRADER");
+  const PC=["var(--em)","var(--violet)","var(--amber)","var(--blue)","var(--coral)","#FF8C42"];
+
+  const addPk=()=>{if(!f.name.trim()){toast("กรุณาตั้งชื่อ","warn");return;}setPockets(p=>[...p,{id:uid(),name:f.name.trim(),amount:parseFloat(f.amount)||0,goal:parseFloat(f.goal)||0,isMain:false}]);toast("✅ สร้าง Pocket","ok");setF({name:"",amount:"",goal:""});};
+  const delPk=async id=>{const t=pockets.find(p=>p.id===id);if(!t)return;const ok=await ask(`ลบ "${t.name}" (${fmt(t.amount)}) ยอดคืนสู่ Cash Box`);if(!ok)return;setPockets(p=>p.filter(x=>x.id!==id).map(pk=>pk.isMain?{...pk,amount:pk.amount+t.amount}:pk));toast("ลบแล้ว","ok");};
+  const doTf=()=>{const a=parseFloat(tf.amount);if(!tf.from||!tf.to||tf.from===tf.to||!a||a<=0){toast("กรุณากรอกครบ","warn");return;}const fp=pockets.find(p=>p.id===tf.from);if(!fp||fp.amount<a){toast("เงินไม่พอ","error");return;}const tp=pockets.find(p=>p.id===tf.to);setPockets(p=>p.map(pk=>pk.id===tf.from?{...pk,amount:Math.max(0,pk.amount-a)}:pk.id===tf.to?{...pk,amount:pk.amount+a}:pk));setTransfers(p=>[...p,{id:uid(),from:fp.name,to:tp.name,amount:a,date:today()}]);toast(`✅ โยก ${fmt(a)} → ${tp.name}`,"ok");setTf(p=>({...p,amount:""}));};
+  const doDeposit=()=>{const a=parseFloat(depMdl.amount||0);if(!a||a<=0){toast("กรุณากรอกจำนวน","warn");return;}setPockets(p=>p.map(pk=>pk.id===depMdl.id?{...pk,amount:pk.amount+a}:pk));toast(`✅ เพิ่ม ${fmt(a)}`,"ok");setDepMdl(null);};
+
+  return<div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
+    {Dialog}
+    {depMdl&&<Modal title={`เพิ่มเงินใน ${depMdl.name}`} onClose={()=>setDepMdl(null)}>
+      <FW label="จำนวนเงิน (บาท)"><Inp type="number" placeholder="0" value={depMdl.amount||""} onChange={e=>setDepMdl(d=>({...d,amount:e.target.value}))} autoFocus/></FW>
+      <div style={{display:"flex",gap:8,marginTop:14}}><Btn col="var(--em)" style={{color:"var(--ink)"}} onClick={doDeposit}>✓ เพิ่มเงิน</Btn><Btn col="var(--bd)" style={{color:"var(--sub)"}} onClick={()=>setDepMdl(null)}>ยกเลิก</Btn></div>
+    </Modal>}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:8}}>
+      <div style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:"1rem"}}><SL>รวมทั้งหมด</SL><div style={{fontSize:22,fontWeight:700,color:"var(--violet)"}}>{fmt(total)}</div></div>
+      <div style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:"1rem"}}><SL>Cash Box</SL><div style={{fontSize:22,fontWeight:700,color:"var(--em)"}}>{fmt(mainPk.amount)}</div></div>
+      {trader&&<div style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:"1rem"}}><SL>💹 TRADER</SL><div style={{fontSize:22,fontWeight:700,color:"var(--blue)"}}>{fmtC(trader.amount,"USD")}</div></div>}
+    </div>
+    <Card style={{borderColor:"var(--em)55",borderWidth:2}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}><span style={{fontSize:14,fontWeight:700,color:"var(--em)"}}>☁ {mainPk.name}</span><Badge label="หลัก" color="var(--em)"/></div><div style={{fontSize:11,color:"var(--muted)"}}>รายรับเข้าที่นี่อัตโนมัติ</div></div>
+        <div style={{fontSize:22,fontWeight:800,color:"var(--em)"}}>{fmt(mainPk.amount)}</div>
+      </div>
+      <div style={{marginTop:10}}><Btn sm col="var(--em)" style={{color:"var(--ink)"}} onClick={()=>setDepMdl({id:mainPk.id,name:mainPk.name,amount:""})}>+ เพิ่มเงิน</Btn></div>
+    </Card>
+    <Card>
+      <SL>สร้าง Cloud Pocket</SL>
+      <div style={{fontSize:11,color:"var(--muted)",marginBottom:8}}>💡 สร้าง Pocket ชื่อ <strong style={{color:"var(--blue)"}}>TRADER</strong> เพื่อรับเงินจากขายสินทรัพย์อัตโนมัติ</div>
+      <div className="fg3" style={{marginBottom:10}}>
+        <FW label="ชื่อ"><Inp placeholder="TRADER / เกษียณ" value={f.name} onChange={e=>setF(p=>({...p,name:e.target.value}))}/></FW>
+        <FW label="ยอดเริ่มต้น"><Inp type="number" placeholder="0" value={f.amount} onChange={e=>setF(p=>({...p,amount:e.target.value}))}/></FW>
+        <FW label="เป้าหมาย"><Inp type="number" placeholder="0" value={f.goal} onChange={e=>setF(p=>({...p,goal:e.target.value}))}/></FW>
+      </div>
+      <Btn sm col="var(--violet)" onClick={addPk}>+ สร้าง Pocket</Btn>
+    </Card>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(175px,1fr))",gap:10}}>
+      {others.map((pk,i)=>{const isT=pk.id===TRADER_PID||pk.name==="TRADER";const col=isT?"var(--blue)":PC[i%PC.length];const pct=pk.goal>0?clamp(Math.round(pk.amount/pk.goal*100),0,100):null;
+        return<Card key={pk.id} style={{borderColor:col+"44"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}><span style={{fontSize:13,fontWeight:700,color:col}}>{isT?"💹 ":""}{pk.name}</span><IBtn onClick={()=>delPk(pk.id)} danger>✕</IBtn></div>
+          <div style={{fontSize:20,fontWeight:700,color:col,marginBottom:4}}>{isT?fmtC(pk.amount,"USD"):fmt(pk.amount)}</div>
+          {isT&&<div style={{fontSize:10,color:"var(--muted)",marginBottom:6}}>รับเงินจากการขายสินทรัพย์</div>}
+          {pct!==null&&<><div style={{fontSize:11,color:"var(--muted)",marginBottom:3}}>เป้า {fmt(pk.goal)} · {pct}%</div><PBar pct={pct} col={col}/></>}
+          <div style={{marginTop:8}}><Btn sm col={col} style={{color:"#fff",width:"100%"}} onClick={()=>setDepMdl({id:pk.id,name:pk.name,amount:""})}>+ เพิ่มเงิน</Btn></div>
+        </Card>;
+      })}
+    </div>
+    <Card>
+      <SL>โยกย้ายเงิน</SL>
+      <div className="fg2" style={{marginBottom:8}}>
+        <FW label="จาก"><Sel value={tf.from} onChange={e=>setTf(p=>({...p,from:e.target.value}))}><option value="">เลือก</option>{pockets.map(p=><option key={p.id} value={p.id}>{p.name} ({fmt(p.amount)})</option>)}</Sel></FW>
+        <FW label="ไปยัง"><Sel value={tf.to} onChange={e=>setTf(p=>({...p,to:e.target.value}))}><option value="">เลือก</option>{pockets.filter(p=>p.id!==tf.from).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</Sel></FW>
+      </div>
+      <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
+        <div style={{flex:1}}><FW label="จำนวน"><Inp type="number" placeholder="0" value={tf.amount} onChange={e=>setTf(p=>({...p,amount:e.target.value}))}/></FW></div>
+        <Btn col="var(--violet)" onClick={doTf}>โยกเงิน</Btn>
+      </div>
+    </Card>
+    {transfers.length>0&&<Card><SL>ประวัติโยกย้าย</SL>
+      <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+        <thead><tr><TH>วันที่</TH><TH>จาก</TH><TH>ไปยัง</TH><TH right>จำนวน</TH></tr></thead>
+        <tbody>{[...transfers].reverse().slice(0,10).map(t=><tr key={t.id}><TD style={{fontSize:11,color:"var(--muted)"}}>{t.date}</TD><TD>{t.from}</TD><TD>{t.to}</TD><TD right style={{color:"var(--violet)",fontWeight:600}}>{fmt(t.amount)}</TD></tr>)}</tbody>
+      </table></div>
+    </Card>}
+  </div>;
+}
+
+/* ══════════════════════════════════════
+   INVEST TAB
+══════════════════════════════════════ */
+function InvestTab({investments,setInvestments,invCurrencies,setInvCurrencies,pockets,setPockets,pendingItems,setPendingItems}){
+  const toast=useToast();const{ask,Dialog}=useConfirm();
+  const defCur=invCurrencies[0]||"USD";
+  const[buyF,setBF]=useState({type:"หุ้น",name:"",date:today(),qty:"",price:"",fee:"",totalCost:"",cur:defCur});
+  const[slipSt,setSlipSt]=useState(null);
+  const[showKey,setShowKey]=useState(false);
+  const[pendMdl,setPendMdl]=useState(null);
+  const[ft,setFT]=useState("ทั้งหมด");const[fa,setFA]=useState("ทั้งหมด");
+  const[newCur,setNC]=useState("");
+  const[savedNames,setSavedNames]=useLS("kpxf_inv_names",[]);
+  const[showDd,setShowDd]=useState(false);
+  const trader=pockets.find(p=>p.id===TRADER_PID||p.name==="TRADER");
+
+  const calc=(f,field,val)=>{const n={...f,[field]:val};const pr=parseFloat(n.price)||0,fe=parseFloat(n.fee)||0,q=parseFloat(n.qty)||0,tot=parseFloat(n.totalCost)||0;if((field==="totalCost"||field==="price"||field==="fee")&&tot>0&&pr>0)n.qty=String(fmtN((tot-fe)/pr,6));if((field==="qty"||field==="price"||field==="fee")&&q>0&&pr>0)n.totalCost=String(fmtN(q*pr+fe,2));return n;};
+  const getAvg=useCallback(key=>{let q=0,c=0;investments.filter(t=>t.key===key&&t.action==="buy").forEach(t=>{q+=t.qty;c+=t.totalCost;});return q>0?c/q:0;},[investments]);
+  const portfolio=useMemo(()=>{const p={};investments.filter(t=>t.action==="buy").forEach(t=>{if(!p[t.key])p[t.key]={key:t.key,type:t.type,name:t.name,qty:0,totalCost:0,cur:t.cur};p[t.key].qty+=t.qty;p[t.key].totalCost+=t.totalCost;});investments.filter(t=>t.action==="sell").forEach(t=>{if(p[t.key])p[t.key].qty=Math.max(0,p[t.key].qty-t.qty);});return Object.values(p).filter(p=>p.qty>0.000001);},[investments]);
+  const totCost=investments.filter(t=>t.action==="buy").reduce((s,t)=>s+t.totalCost,0);
+  const totPnl=useMemo(()=>investments.filter(t=>t.action==="sell").reduce((s,t)=>s+(t.price-getAvg(t.key))*t.qty-(t.fee||0),0),[investments,getAvg]);
+
+  const addBuy=()=>{
+    if(!buyF.name||!buyF.qty||!buyF.price){toast("กรุณากรอก ชื่อ/จำนวน/ราคา","warn");return;}
+    const q=parseFloat(buyF.qty),pr=parseFloat(buyF.price),fe=parseFloat(buyF.fee)||0;
+    const nm=buyF.name.trim();
+    setInvestments(p=>[...p,{id:uid(),action:"buy",type:buyF.type,name:nm,key:nm.toUpperCase(),date:buyF.date,qty:q,price:pr,fee:fe,totalCost:q*pr+fe,cur:buyF.cur}]);
+    if(nm&&!savedNames.includes(nm))setSavedNames(p=>[...p,nm]);
+    toast("✅ บันทึกการซื้อ","ok");setBF(p=>({...p,name:"",qty:"",price:"",fee:"",totalCost:""}));
+  };
+
+  const[slipErr,setSlipErr]=useState("");
+  const readSlip=async file=>{
+    if(!localStorage.getItem(GEMINI_KEY)){setSlipSt("nokey");setShowKey(true);return;}
+    setSlipSt("loading");setSlipErr("");
+    try{
+      const prompt="Analyze this investment/stock trading slip image. Return ONLY valid JSON, no markdown. Format: {\"action\":\"buy or sell\",\"type\":\"stock/gold/fund/crypto/other\",\"name\":\"asset ticker or name\",\"date\":\"YYYY-MM-DD\",\"qty\":quantity_number,\"price\":price_per_unit_number,\"fee\":total_fee_number,\"totalCost\":total_cost_number,\"cur\":\"USD or THB or EUR\"}";
+      const raw=await readSlipGemini(file,prompt);
+      let d;
+      try{d=JSON.parse(raw);}catch{throw new Error("Gemini ตอบไม่ใช่ JSON: "+raw.slice(0,80));}
+      const p={id:uid(),source:"invest",action:d.action||"buy",type:d.type||"หุ้น",name:d.name||"",date:d.date||today(),qty:parseFloat(d.qty)||0,price:parseFloat(d.price)||0,fee:parseFloat(d.fee)||0,totalCost:parseFloat(d.totalCost)||0,cur:d.cur||"USD",createdAt:nowIso()};
+      setPendingItems(p2=>[...p2,p]);setSlipSt("ok");setPendMdl(p);
+    }catch(err){
+      setSlipSt(err.message==="NO_KEY"?"nokey":"error");
+      setSlipErr(err.message||"");
+      if(err.message==="NO_KEY")setShowKey(true);
+    }
+  };
+
+  const delTrade=async id=>{const ok=await ask("ลบรายการนี้?");if(ok){setInvestments(p=>p.filter(x=>x.id!==id));toast("ลบแล้ว","ok");}};
+  const invPend=pendingItems.filter(x=>x.source==="invest");
+  const types=["ทั้งหมด",...[...new Set(investments.map(t=>t.type))]];
+  const names=useMemo(()=>["ทั้งหมด",...[...new Set((ft==="ทั้งหมด"?investments:investments.filter(t=>t.type===ft)).map(t=>t.name))]]  ,[investments,ft]);
+  useEffect(()=>setFA("ทั้งหมด"),[ft]);
+  const filtered=useMemo(()=>investments.filter(t=>(ft==="ทั้งหมด"||t.type===ft)&&(fa==="ทั้งหมด"||t.name===fa)),[investments,ft,fa]);
+  const TC={ทองคำ:"var(--amber)",หุ้น:"var(--blue)",กองทุน:"var(--violet)",คริปโต:"var(--em)",อื่นๆ:"var(--muted)"};
+
+  return<div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
+    {Dialog}
+    {pendMdl&&<PendInvModal item={pendMdl} pockets={pockets} setPockets={setPockets} setInvestments={setInvestments} savedNames={savedNames} setSavedNames={setSavedNames} onClose={()=>{setPendingItems(p=>p.filter(x=>x.id!==pendMdl.id));setPendMdl(null);}}/>}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:8}}>
+      <div style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:"1rem"}}><SL>พอร์ต</SL><div style={{fontSize:22,fontWeight:700,color:"var(--blue)"}}>{portfolio.length} รายการ</div></div>
+      <div style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:"1rem"}}><SL>ต้นทุนรวม</SL><div style={{fontSize:22,fontWeight:700,color:"var(--amber)"}}>{fmtN(totCost,2)}</div></div>
+      <div style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:"1rem"}}><SL>P&L รวม</SL><div style={{fontSize:22,fontWeight:700,color:totPnl>=0?"var(--em)":"var(--coral)"}}>{totPnl>=0?"+":""}{fmtN(totPnl,2)}</div></div>
+      {trader&&<div style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:"1rem"}}><SL>💹 TRADER</SL><div style={{fontSize:22,fontWeight:700,color:"var(--blue)"}}>{fmtC(trader.amount,"USD")}</div></div>}
+    </div>
+    <Card style={{borderColor:"var(--blue)44"}}>
+      <SL>📎 อ่าน Slip การลงทุน (Gemini AI)</SL>
+      {showKey&&<GeminiCfg onClose={()=>setShowKey(false)}/>}
+      <SlipZone onFile={readSlip} state={slipSt}/>
+      {slipErr&&slipSt==="error"&&<div style={{background:"var(--coral)18",border:"0.5px solid var(--coral)50",borderRadius:10,padding:"8px 12px",marginBottom:8,fontSize:11,color:"var(--coral)"}}>{slipErr}</div>}
+      <Btn sm col="var(--surface)" style={{color:"var(--sub)",border:"1px solid var(--bd)"}} onClick={()=>setShowKey(p=>!p)}>🔑 Gemini Key</Btn>
+    </Card>
+    {invPend.length>0&&<Card style={{borderColor:"var(--amber)66",borderWidth:2}}>
+      <SL>⏳ รอยืนยัน ({invPend.length})</SL>
+      {invPend.map(item=><div key={item.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"0.5px solid var(--bd)"}}>
+        <div><div style={{display:"flex",alignItems:"center",gap:6}}><Badge label={item.action==="buy"?"ซื้อ":"ขาย"} color={item.action==="buy"?"var(--em)":"var(--coral)"}/><span style={{fontSize:13,fontWeight:600,color:"var(--tx)"}}>{item.name}</span></div><div style={{fontSize:11,color:"var(--muted)"}}>{item.date} · {fmtC(item.totalCost,item.cur||"USD")}</div>{item.action==="sell"&&<div style={{fontSize:11,color:"var(--blue)"}}>💰 เงินเข้า TRADER</div>}</div>
+        <div style={{display:"flex",gap:6}}><Btn sm col={item.action==="buy"?"var(--em)":"var(--coral)"} style={{color:item.action==="buy"?"var(--ink)":"#fff"}} onClick={()=>setPendMdl(item)}>ยืนยัน</Btn><IBtn onClick={()=>setPendingItems(p=>p.filter(x=>x.id!==item.id))} danger>✕</IBtn></div>
+      </div>)}
+    </Card>}
+    <Card>
+      <SL>บันทึกการซื้อ</SL>
+      <div className="fg2" style={{marginBottom:10}}>
+        <FW label="ประเภท"><Sel value={buyF.type} onChange={e=>setBF(p=>({...p,type:e.target.value,name:e.target.value==="ทองคำ"?"GOLD":p.name}))}>{["ทองคำ","หุ้น","กองทุน","คริปโต","อื่นๆ"].map(t=><option key={t}>{t}</option>)}</Sel></FW>
+        <FW label="ชื่อสินทรัพย์"><div style={{position:"relative"}}>
+          <Inp placeholder="PTT, BTC, VOO" value={buyF.name} onChange={e=>{setBF(p=>calc(p,"name",e.target.value));setShowDd(true);}} onFocus={()=>setShowDd(true)} onBlur={()=>setTimeout(()=>setShowDd(false),180)}/>
+          {showDd&&savedNames.filter(n=>n.toLowerCase().includes(buyF.name.toLowerCase())&&n!==buyF.name).length>0&&<div style={{position:"absolute",top:"100%",left:0,right:0,background:"var(--card)",border:"1px solid var(--bd)",borderRadius:10,zIndex:100,maxHeight:150,overflowY:"auto",boxShadow:"0 4px 16px var(--shadow)"}}>
+            {savedNames.filter(n=>n.toLowerCase().includes(buyF.name.toLowerCase())&&n!==buyF.name).map(n=><div key={n} style={{padding:"8px 12px",cursor:"pointer",fontSize:13,display:"flex",justifyContent:"space-between",color:"var(--tx)"}} onMouseDown={()=>{setBF(p=>({...p,name:n}));setShowDd(false);}}><span>{n}</span><span style={{fontSize:10,color:"var(--muted)"}} onMouseDown={e=>{e.stopPropagation();setSavedNames(p=>p.filter(x=>x!==n));}}>✕</span></div>)}
+          </div>}
+        </div></FW>
+        <FW label="วันที่"><Inp type="date" value={buyF.date} onChange={e=>setBF(p=>({...p,date:e.target.value}))}/></FW>
+        <FW label="สกุลเงิน"><Sel value={buyF.cur} onChange={e=>setBF(p=>({...p,cur:e.target.value}))}>{invCurrencies.map(c=><option key={c}>{c}</option>)}</Sel></FW>
+      </div>
+      <div style={{background:"var(--surface)",borderRadius:10,padding:12,marginBottom:10}}>
+        <div style={{fontSize:11,color:"var(--amber)",marginBottom:8}}>💡 กรอก 2 จาก 3 — คำนวณอัตโนมัติ</div>
+        <div className="fg2">
+          <FW label="จำนวนหน่วย"><Inp type="number" step="any" value={buyF.qty} onChange={e=>setBF(p=>calc(p,"qty",e.target.value))}/></FW>
+          <FW label="ราคา/หน่วย"><Inp type="number" step="any" value={buyF.price} onChange={e=>setBF(p=>calc(p,"price",e.target.value))}/></FW>
+          <FW label="ค่าธรรมเนียม"><Inp type="number" step="any" value={buyF.fee} onChange={e=>setBF(p=>calc(p,"fee",e.target.value))}/></FW>
+          <FW label="ยอดรวม"><Inp type="number" step="any" value={buyF.totalCost} onChange={e=>setBF(p=>calc(p,"totalCost",e.target.value))} style={{borderColor:"var(--amber)55"}}/></FW>
+        </div>
+      </div>
+      <Btn col="var(--em)" style={{color:"var(--ink)"}} onClick={addBuy}>🛒 บันทึกการซื้อ</Btn>
+    </Card>
+    {portfolio.length>0&&<Card>
+      <SL>พอร์ตการลงทุน</SL>
+      <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:12}}>
+        <Donut slices={portfolio.map((p,i)=>({value:p.totalCost,color:Object.values(TC)[i%5]}))} size={80}/>
+        <div style={{flex:1}}>{portfolio.map((p,i)=><div key={p.key} style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3}}><span style={{color:Object.values(TC)[i%5]}}>● {p.name}</span><span style={{color:"var(--muted)"}}>{fmtC(p.qty*getAvg(p.key),p.cur)}</span></div>)}</div>
+      </div>
+      <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+        <thead><tr><TH>ประเภท</TH><TH>ชื่อ</TH><TH right>ถือครอง</TH><TH right>เฉลี่ย</TH><TH right>มูลค่า</TH><TH></TH></tr></thead>
+        <tbody>{portfolio.map(p=>{const avg=getAvg(p.key);const tvUrl=`https://www.tradingview.com/chart/?symbol=${encodeURIComponent(p.type==="หุ้น"?"SET:"+p.name:p.name)}`;return<tr key={p.key}><TD><Badge label={p.type} color={TC[p.type]||"var(--muted)"}/></TD><TD style={{fontWeight:600,color:"var(--tx)"}}>{p.name}</TD><TD right>{fmtN(p.qty,4)}</TD><TD right style={{color:"var(--amber)"}}>{fmtC(avg,p.cur)}</TD><TD right style={{fontWeight:600,color:"var(--tx)"}}>{fmtC(p.qty*avg,p.cur)}</TD><TD><a href={tvUrl} target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",background:"#131722",color:"#fff",borderRadius:6,padding:"3px 8px",fontSize:11,textDecoration:"none",fontWeight:600}}>📈</a></TD></tr>;})}</tbody>
+      </table></div>
+    </Card>}
+    <Card style={{padding:"10px 14px"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+        <span style={{fontSize:12,color:"var(--muted)",fontWeight:600}}>💱</span>
+        <div style={{display:"flex",flexWrap:"wrap",gap:5,flex:1}}>{invCurrencies.map((c,i)=><div key={c} style={{background:"var(--surface)",border:`1px solid ${i===0?"var(--em)":"var(--bd)"}`,borderRadius:99,padding:"2px 8px",fontSize:11,display:"flex",alignItems:"center",gap:4,color:"var(--tx)"}}>{c}{i===0&&<span style={{color:"var(--em)",fontSize:9}}>✓</span>}{i>0&&<IBtn onClick={()=>setInvCurrencies(p=>p.filter(x=>x!==c))} danger>✕</IBtn>}</div>)}</div>
+        <div style={{display:"flex",gap:5}}><Inp placeholder="SGD" value={newCur} onChange={e=>setNC(e.target.value.toUpperCase())} style={{width:80,padding:"5px 8px",fontSize:12}}/><Btn sm col="var(--em)" style={{color:"var(--ink)"}} onClick={()=>{if(newCur.trim()&&!invCurrencies.includes(newCur)){setInvCurrencies(p=>[...p,newCur]);setNC("");}}}>+</Btn></div>
+      </div>
+    </Card>
+    <Card>
+      <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"center",marginBottom:10}}>
+        <SL style={{margin:0}}>ประวัติการซื้อขาย</SL>
+        <div style={{display:"flex",gap:6,marginLeft:"auto",flexWrap:"wrap"}}>
+          <Sel value={ft} onChange={e=>setFT(e.target.value)} style={{width:100,padding:"5px 8px",fontSize:12}}>{types.map(t=><option key={t}>{t}</option>)}</Sel>
+          <Sel value={fa} onChange={e=>setFA(e.target.value)} style={{width:120,padding:"5px 8px",fontSize:12}}>{names.map(n=><option key={n}>{n}</option>)}</Sel>
+        </div>
+      </div>
+      {(()=>{
+        const sorted=[...filtered].sort((a,b)=>a.date.localeCompare(b.date));
+        const rq={},rc={};
+        const rows=sorted.map(t=>{const k=t.key;if(!rq[k]){rq[k]=0;rc[k]=0;}let avg=rq[k]>0?rc[k]/rq[k]:0,pnl;if(t.action==="buy"){rq[k]+=t.qty;rc[k]+=t.totalCost;}else{pnl=(t.price-avg)*t.qty-(t.fee||0);rq[k]=Math.max(0,rq[k]-t.qty);rc[k]=rq[k]*(rq[k]>0?avg:0);}return{...t,rAvg:rq[k]>0?rc[k]/rq[k]:avg,pnl};});
+        const rPnl=rows.filter(t=>t.action==="sell").reduce((s,t)=>s+(t.pnl||0),0);
+        return<div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+          <thead><tr><TH>วันที่</TH><TH>ประเภท</TH><TH>ชื่อ</TH><TH right>จำนวน</TH><TH right>ราคา</TH><TH right>มูลค่า</TH><TH right>P&L</TH><TH></TH></tr></thead>
+          <tbody>
+            {rows.map(t=><tr key={t.id}>
+              <TD style={{fontSize:11,color:"var(--muted)"}}>{t.date}</TD>
+              <TD><Badge label={t.action==="buy"?"ซื้อ":"ขาย"} color={t.action==="buy"?"var(--em)":"var(--coral)"}/></TD>
+              <TD style={{fontWeight:600,color:"var(--tx)"}}>{t.name}</TD>
+              <TD right>{fmtN(t.qty,4)}</TD>
+              <TD right>{fmtC(t.price,t.cur)}</TD>
+              <TD right>{fmtC(t.totalCost,t.cur)}</TD>
+              <TD right>{t.action==="sell"&&t.pnl!==undefined?<span style={{color:t.pnl>=0?"var(--em)":"var(--coral)",fontWeight:700}}>{t.pnl>=0?"+":""}{fmtN(t.pnl,2)}</span>:"-"}</TD>
+              <TD><IBtn onClick={()=>delTrade(t.id)} danger>🗑</IBtn></TD>
+            </tr>)}
+            {!rows.length&&<ERow cols={8} msg="ไม่มีรายการ"/>}
+            {rows.length>0&&<tr style={{background:"var(--surface)"}}>
+              <td colSpan={6} style={{padding:"9px 8px",fontSize:13,fontWeight:700,color:"var(--sub)"}}>P&L รวม ({rows.filter(t=>t.action==="sell").length} รายการ)</td>
+              <td style={{padding:"9px 8px",textAlign:"right",fontSize:15,fontWeight:800,color:rPnl>=0?"var(--em)":"var(--coral)"}}>{rPnl>=0?"+":""}{fmtN(rPnl,2)}</td><td/>
+            </tr>}
+          </tbody>
+        </table></div>;
+      })()}
+    </Card>
+  </div>;
+}
+
+/* ══════════════════════════════════════
+   SUMMARY TAB
+══════════════════════════════════════ */
+function SummaryTab({incomes,expenses,installments}){
+  const[year,setYear]=useState(new Date().getFullYear());
+  const months=Array.from({length:12},(_,i)=>i);
+  const COLS=["var(--coral)","var(--violet)","var(--amber)","var(--em)","var(--blue)","#FF8C42","#D4537E"];
+  const data=useMemo(()=>months.map(m=>{
+    const mk=year+"-"+String(m+1).padStart(2,"0");
+    const inc=incomes.filter(e=>e.month===mk).reduce((s,e)=>s+e.amount,0);
+    const exp=expenses.filter(e=>e.month===mk).reduce((s,e)=>s+e.amount,0);
+    const inst=installments.filter(i=>{const[sy,sm]=i.startMonth.split("-").map(Number);const d=(year-sy)*12+(m-(sm-1));return d>=0&&d<i.totalMonths;}).reduce((s,i)=>s+i.monthly,0);
+    return{mk,label:mLbl(mk),inc,exp:exp+inst,bal:inc-exp-inst};
+  }),[incomes,expenses,installments,year]);
+  const totI=data.reduce((s,d)=>s+d.inc,0),totE=data.reduce((s,d)=>s+d.exp,0),totB=totI-totE;
+  const sr=totI>0?clamp(Math.round(totB/totI*100),0,100):0;
+  const expCY=useMemo(()=>{const m={};expenses.filter(e=>e.month.startsWith(String(year))).forEach(e=>{m[e.category]=(m[e.category]||0)+e.amount;});installments.forEach(inst=>{months.forEach(mo=>{const[sy,sm]=inst.startMonth.split("-").map(Number);const d=(year-sy)*12+(mo-(sm-1));if(d>=0&&d<inst.totalMonths)m["ผ่อนชำระ"]=(m["ผ่อนชำระ"]||0)+inst.monthly;});});return m;},[expenses,installments,year]);
+  return<div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
+    <div style={{display:"flex",alignItems:"center",gap:10}}>
+      <span style={{fontSize:12,color:"var(--muted)",fontWeight:600}}>ปี</span>
+      <Sel value={year} onChange={e=>setYear(parseInt(e.target.value))} style={{width:100}}>{[2022,2023,2024,2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</Sel>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8}}>
+      <div style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:"1rem"}}><SL>รายรับรวม</SL><div style={{fontSize:20,fontWeight:700,color:"var(--em)"}}>{fmt(totI)}</div></div>
+      <div style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:"1rem"}}><SL>รายจ่ายรวม</SL><div style={{fontSize:20,fontWeight:700,color:"var(--coral)"}}>{fmt(totE)}</div></div>
+      <div style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:"1rem"}}><SL>ออมสะสม</SL><div style={{fontSize:20,fontWeight:700,color:totB>=0?"var(--violet)":"var(--coral)"}}>{fmt(totB)}</div></div>
+      <div style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:"1rem"}}><SL>อัตราออม</SL><div style={{fontSize:20,fontWeight:700,color:sr>=20?"var(--em)":sr>=10?"var(--amber)":"var(--coral)"}}>{sr}%</div><div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{sr>=20?"ดีมาก":sr>=10?"พอใช้":"ควรปรับ"}</div></div>
+    </div>
+    <Card>
+      <SL>รายรับ vs รายจ่าย {year}</SL>
+      <div style={{display:"flex",alignItems:"flex-end",gap:3,height:90,marginBottom:6}}>
+        {data.map((d,i)=>{const max=Math.max(...data.map(x=>Math.max(x.inc,x.exp)),1);return<div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1}}>
+          <div style={{width:"100%",display:"flex",gap:1,alignItems:"flex-end",height:72}}>
+            <div style={{flex:1,background:"var(--em)",borderRadius:"2px 2px 0 0",height:`${(d.inc/max)*100}%`,minHeight:1,opacity:.85}}/>
+            <div style={{flex:1,background:"var(--coral)",borderRadius:"2px 2px 0 0",height:`${(d.exp/max)*100}%`,minHeight:1,opacity:.85}}/>
+          </div>
+          <div style={{fontSize:9,color:"var(--muted)"}}>{d.label.replace(/\s.*/,"")}</div>
+        </div>;})}
+      </div>
+      <div style={{display:"flex",gap:12}}><span style={{fontSize:11,color:"var(--em)"}}>● รายรับ</span><span style={{fontSize:11,color:"var(--coral)"}}>● รายจ่าย</span></div>
+    </Card>
+    <Card>
+      <SL>แนวโน้มเงินออม</SL>
+      {(()=>{let cum=0;const pts=data.map(d=>{cum+=d.bal;return cum;});const mn=Math.min(...pts,0),mx=Math.max(...pts,1),rng=mx-mn||1,W=100,H=50;const px=i=>(i/(pts.length-1))*W,py=v=>H-((v-mn)/rng)*H;const pathD=pts.map((v,i)=>`${i===0?"M":"L"} ${px(i)} ${py(v)}`).join(" ");
+        return<svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",height:70}}>
+          <defs><linearGradient id="sg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--violet)" stopOpacity=".3"/><stop offset="100%" stopColor="var(--violet)" stopOpacity="0"/></linearGradient></defs>
+          <path d={pathD+` L ${W} ${H} L 0 ${H} Z`} fill="url(#sg2)"/>
+          <path d={pathD} fill="none" stroke="var(--violet)" strokeWidth="1.5"/>
+          {pts.map((v,i)=><circle key={i} cx={px(i)} cy={py(v)} r="1.8" fill={v>=0?"var(--violet)":"var(--coral)"}/>)}
+        </svg>;})()}
+    </Card>
+    {Object.keys(expCY).length>0&&<Card>
+      <SL>รายจ่ายตามหมวด</SL>
+      <div style={{display:"flex",gap:14,alignItems:"center"}}>
+        <Donut slices={Object.entries(expCY).map(([k,v],i)=>({value:v,color:COLS[i%COLS.length]}))} size={90}/>
+        <div style={{flex:1}}>{Object.entries(expCY).sort((a,b)=>b[1]-a[1]).map(([k,v],i)=>{const pct=totE>0?Math.round(v/totE*100):0;return<div key={k} style={{marginBottom:6}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:2}}><span style={{color:COLS[i%COLS.length]}}>● {k}</span><span style={{color:"var(--muted)"}}>{fmt(v)} ({pct}%)</span></div><PBar pct={pct} col={COLS[i%COLS.length]} h={4}/></div>;})}</div>
+      </div>
+    </Card>}
+    <Card>
+      <SL>ตารางรายเดือน</SL>
+      <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+        <thead><tr><TH>เดือน</TH><TH right>รายรับ</TH><TH right>รายจ่าย</TH><TH right>คงเหลือ</TH><TH>%ใช้จ่าย</TH></tr></thead>
+        <tbody>{data.map(d=>{const pct=d.inc>0?clamp(Math.round(d.exp/d.inc*100),0,100):0;return<tr key={d.mk}><TD style={{fontWeight:600,color:"var(--tx)"}}>{d.label}</TD><TD right style={{color:"var(--em)"}}>{fmt(d.inc)}</TD><TD right style={{color:"var(--coral)"}}>{fmt(d.exp)}</TD><TD right style={{color:d.bal>=0?"var(--em)":"var(--coral)",fontWeight:600}}>{fmt(d.bal)}</TD><TD style={{minWidth:80}}><PBar pct={pct} col={pct>90?"var(--coral)":pct>70?"var(--amber)":"var(--em)"} h={5}/></TD></tr>;})}</tbody>
+      </table></div>
+    </Card>
+  </div>;
+}
+
+/* ══════════════════════════════════════
+   APP ROOT
+══════════════════════════════════════ */
+const DEF_POCKETS=[
+  {id:MAIN_PID,name:"Cash Box",amount:0,goal:0,isMain:true},
+  {id:TRADER_PID,name:"TRADER",amount:0,goal:0,isMain:false},
+  {id:"p1",name:"ท่องเที่ยว",amount:0,goal:30000,isMain:false},
+  {id:"p2",name:"ฉุกเฉิน",amount:0,goal:50000,isMain:false}
+];
+const INCCATS=["เงินเดือน","ธุรกิจ","ฟรีแลนซ์","ดอกเบี้ย/ปันผล","รางวัล","อื่นๆ"];
+const EXPCATS=["อาหาร","เดินทาง","สาธารณูปโภค","ความบันเทิง","สุขภาพ","การศึกษา","ช้อปปิ้ง","อื่นๆ"];
+
+/* Desktop tab config */
+const DESK_TABS=[
+  {id:"overview",label:"ภาพรวม"},
+  {id:"summary",label:"สรุปรายปี"},
+  {id:"income",label:"รายรับ"},
+  {id:"expense",label:"รายจ่าย"},
+  {id:"saving",label:"เงินเก็บ"},
+  {id:"invest",label:"ลงทุน"},
+];
+/* Mobile bottom nav config */
+const MOB_TABS=[
+  {id:"home",label:"หน้าแรก",icon:"🏠"},
+  {id:"expense",label:"รายจ่าย",icon:"💸"},
+  {id:"saving",label:"Pockets",icon:"💰"},
+  {id:"invest",label:"ลงทุน",icon:"📉"},
+  {id:"more",label:"เพิ่มเติม",icon:"☰"},
+];
+/* "more" drawer maps to desktop tabs */
+const MORE_TABS=[
+  {id:"income",label:"รายรับ",icon:"💚"},
+  {id:"summary",label:"สรุปรายปี",icon:"📊"},
+];
+
+function App(){
+  const[incomes,setIncomes]=useLS("kpxf_inc",[]);
+  const[expenses,setExpenses]=useLS("kpxf_exp",[]);
+  const[installments,setInstallments]=useLS("kpxf_inst",[]);
+  const[instPayments,setInstPayments]=useLS("kpxf_instpay",[]);
+  const[ccPayments,setCcPayments]=useLS("kpxf_ccpay",[]);
+  const[pockets,setPockets]=useLS("kpxf_pockets",DEF_POCKETS);
+  const[investments,setInvestments]=useLS("kpxf_inv",[]);
+  const[incCats,setIncCats]=useLS("kpxf_inccats",INCCATS);
+  const[expCats,setExpCats]=useLS("kpxf_expcats",EXPCATS);
+  const[transfers,setTransfers]=useLS("kpxf_tf",[]);
+  const[invCurrencies,setInvCurrencies]=useLS("kpxf_invcur",["USD","THB","EUR"]);
+  const[pendingItems,setPendingItems]=useLS("kpxf_pending",[]);
+  const[savedNames,setSavedNames]=useLS("kpxf_inv_names",[]);
+  const[tab,setTab]=useState("home"); // mobile uses string id
+  const[deskTab,setDeskTab]=useState(0); // desktop uses index
+  const[syncState,setSyncState]=useState("idle");
+  const[showMore,setShowMore]=useState(false);
+  const mobile=useIsMobile();
+  const currencies=["THB","USD","EUR","JPY","GBP","SGD"];
+
+  // Ensure critical pockets always exist
+  useEffect(()=>{
+    let p=[...pockets],upd=false;
+    if(!p.find(x=>x.isMain)){p=[{id:MAIN_PID,name:"Cash Box",amount:0,goal:0,isMain:true},...p];upd=true;}
+    if(!p.find(x=>x.id===TRADER_PID||x.name==="TRADER")){p=[...p,{id:TRADER_PID,name:"TRADER",amount:0,goal:0,isMain:false}];upd=true;}
+    if(upd)setPockets(p);
+  },[]);
+
+  // Keep stateRef current for SheetsSync
+  const stateRef=useRef();
+  const state={incomes,expenses,installments,instPayments,ccPayments,pockets,investments,incCats,expCats,transfers,invCurrencies};
+  stateRef.current=state;
+  const getState=useCallback(()=>stateRef.current,[]);
+  const setAll=useCallback(d=>{
+    if(d.incomes)setIncomes(d.incomes);if(d.expenses)setExpenses(d.expenses);
+    if(d.installments)setInstallments(d.installments);if(d.instPayments)setInstPayments(d.instPayments);
+    if(d.ccPayments)setCcPayments(d.ccPayments);if(d.pockets)setPockets(d.pockets);
+    if(d.investments)setInvestments(d.investments);if(d.incCats)setIncCats(d.incCats);
+    if(d.expCats)setExpCats(d.expCats);if(d.transfers)setTransfers(d.transfers);
+    if(d.invCurrencies)setInvCurrencies(d.invCurrencies);
+  },[]);
+
+  // Badge counts
+  const pendExp=pendingItems.filter(x=>x.source==="expense").length;
+  const pendInv=pendingItems.filter(x=>x.source==="invest").length;
+  const totalPend=pendingItems.length;
+
+  // Mobile tab → setTab helper (also used by MobileHome quick actions)
+  const goTab=useCallback(id=>{
+    if(MORE_TABS.find(t=>t.id===id)){setShowMore(false);}
+    setTab(id);
+  },[]);
+
+  // Desktop tab badge
+  const deskBadge=i=>{const id=DESK_TABS[i].id;if(id==="expense")return pendExp;if(id==="invest")return pendInv;return 0;};
+
+  // Shared tab content renderer
+  const renderContent=(tabId)=>{
+    const props={
+      expenses,setExpenses,expCats,setExpCats,
+      installments,setInstallments,instPayments,setInstPayments,
+      ccPayments,setCcPayments,pockets,setPockets,
+      currencies,pendingItems,setPendingItems
+    };
+    switch(tabId){
+      case "home": return<MobileHome incomes={incomes} expenses={expenses} installments={installments} pockets={pockets} setPockets={setPockets} pendingItems={pendingItems} setPendingItems={setPendingItems} setExpenses={setExpenses} setInstallments={setInstallments} setInvestments={setInvestments} savedNames={savedNames} setSavedNames={setSavedNames} setTab={goTab}/>;
+      case "overview": return<DesktopOverview incomes={incomes} expenses={expenses} installments={installments} instPayments={instPayments} pockets={pockets}/>;
+      case "summary": return<SummaryTab incomes={incomes} expenses={expenses} installments={installments}/>;
+      case "income": return<IncomeTab incomes={incomes} setIncomes={setIncomes} cats={incCats} setCats={setIncCats} pockets={pockets} setPockets={setPockets} currencies={currencies}/>;
+      case "expense": return<ExpenseTab {...props}/>;
+      case "saving": return<SavingTab pockets={pockets} setPockets={setPockets} transfers={transfers} setTransfers={setTransfers}/>;
+      case "invest": return<InvestTab investments={investments} setInvestments={setInvestments} invCurrencies={invCurrencies} setInvCurrencies={setInvCurrencies} pockets={pockets} setPockets={setPockets} pendingItems={pendingItems} setPendingItems={setPendingItems}/>;
+      default: return null;
+    }
+  };
+
+  /* ── MOBILE LAYOUT ── */
+  if(mobile){
+    const activeTabId=tab==="more"?"home":tab;
+    return<ToastProvider>
+      <div style={{background:"var(--bg)",minHeight:"100vh"}}>
+        {/* Mobile header */}
+        <div style={{background:"var(--card)",borderBottom:"0.5px solid var(--bd)",padding:"max(env(safe-area-inset-top),10px) 16px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:700}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:17,fontWeight:800,color:"var(--tx)"}}>KPx<span style={{color:"var(--em)"}}>Finance</span></span>
+            <SyncBadge s={syncState}/>
+          </div>
+          <SheetsSync getState={getState} setAll={setAll} setSS={setSyncState}/>
+        </div>
+
+        {/* Page content */}
+        <div className="mppad" style={{padding:"12px 12px 0"}}>
+          {tab==="more"
+            ? /* More drawer */
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                <div style={{fontSize:16,fontWeight:700,color:"var(--tx)",marginBottom:4}}>เพิ่มเติม</div>
+                {MORE_TABS.map(t=><div key={t.id} onClick={()=>goTab(t.id)} style={{background:"var(--card)",border:"0.5px solid var(--bd)",borderRadius:14,padding:"16px",display:"flex",alignItems:"center",gap:14,cursor:"pointer"}}>
+                  <span style={{fontSize:26}}>{t.icon}</span>
+                  <span style={{fontSize:15,fontWeight:600,color:"var(--tx)"}}>{t.label}</span>
+                </div>)}
+              </div>
+            : renderContent(tab)
+          }
+        </div>
+
+        {/* Bottom nav */}
+        <nav className="bnav">
+          {MOB_TABS.map(t=>{
+            const isActive=tab===t.id||(t.id==="more"&&tab==="more");
+            const badge=t.id==="expense"?pendExp:t.id==="invest"?pendInv:t.id==="more"&&MORE_TABS.some(m=>m.id==="income")?0:0;
+            return<button key={t.id} className={isActive?"act":""} onClick={()=>{if(t.id==="more"){setTab("more");}else{goTab(t.id);}}}>
+              <span className="ni">{t.icon}</span>{t.label}
+              {badge>0&&<span style={{position:"absolute",top:2,right:"50%",transform:"translateX(10px)",background:"var(--amber)",color:"var(--ink)",borderRadius:99,fontSize:8,fontWeight:800,padding:"1px 4px",minWidth:14,textAlign:"center"}}>{badge}</span>}
+            </button>;
+          })}
+        </nav>
+      </div>
+    </ToastProvider>;
+  }
+
+  /* ── DESKTOP LAYOUT ── */
+  const deskTabId=DESK_TABS[deskTab]?.id||"overview";
+  return<ToastProvider>
+    <div style={{background:"var(--bg)",minHeight:"100vh",maxWidth:1200,margin:"0 auto",padding:"0.9rem 1rem 2rem"}}>
+      {/* Desktop header */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"1rem",flexWrap:"wrap",gap:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:20,fontWeight:800,color:"var(--tx)",letterSpacing:"-0.5px"}}>KPx<span style={{color:"var(--em)"}}>Finance</span></span>
+          <span style={{fontSize:9,color:"var(--muted)",background:"var(--surface)",padding:"2px 8px",borderRadius:99,border:"0.5px solid var(--bd)"}}>v9.0</span>
+          <SyncBadge s={syncState}/>
+        </div>
+        <SheetsSync getState={getState} setAll={setAll} setSS={setSyncState}/>
+      </div>
+
+      {/* Desktop tab bar */}
+      <div style={{display:"flex",background:"var(--surface)",border:"0.5px solid var(--bd)",borderRadius:12,padding:3,gap:2,marginBottom:"1.1rem",overflowX:"auto"}}>
+        {DESK_TABS.map((t,i)=>{
+          const active=deskTab===i;
+          const b=deskBadge(i);
+          return<button key={t.id} onClick={()=>setDeskTab(i)} style={{position:"relative",flex:"0 0 auto",background:active?"var(--card)":"transparent",color:active?"var(--tx)":"var(--muted)",border:"none",borderRadius:9,padding:"7px 16px",fontSize:13,fontWeight:active?700:500,cursor:"pointer",boxShadow:active?"0 1px 6px var(--shadow)":"none",transition:"all .15s",whiteSpace:"nowrap"}}>
+            {t.label}
+            {b>0&&<span style={{position:"absolute",top:2,right:4,background:"var(--amber)",color:"var(--ink)",borderRadius:99,fontSize:9,fontWeight:700,padding:"1px 5px",minWidth:16,textAlign:"center"}}>{b}</span>}
+          </button>;
+        })}
+      </div>
+
+      {/* Desktop content */}
+      {renderContent(deskTabId)}
+    </div>
+  </ToastProvider>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
